@@ -24,5 +24,7 @@ Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denou
 
 ![DDL Packs](resources/DDL-packs.png)
 
+![DCL Packs](resources/DCL-packs.png)
+
 ## License
 This mod is licensed under the [MIT License](https://github.com/hiimjasmine00/IntegratedDemonlist/blob/master/LICENSE).
