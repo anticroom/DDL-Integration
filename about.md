@@ -1,4 +1,4 @@
-# Denouement List Integration
+# Denouement Demon List Integration
 Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denouement Challenge List](https://denouementdl.vercel.app/#/DCL) integration.
 
 ## Features
