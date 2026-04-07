@@ -1,5 +1,4 @@
 #include "IDListLayer.hpp"
-#include "../DDLIntegration.hpp"
 #include <Geode/binding/AppDelegate.hpp>
 #include <Geode/binding/CustomListView.hpp>
 #include <Geode/binding/GameLevelManager.hpp>
@@ -9,7 +8,9 @@
 #include <Geode/binding/LoadingCircle.hpp>
 #include <Geode/binding/SetIDPopup.hpp>
 #include <Geode/binding/GJSearchObject.hpp>
+#include <Geode/binding/ButtonSprite.hpp>
 #include <Geode/loader/Mod.hpp>
+#include <Geode/ui/ListView.hpp>
 #include <Geode/utils/random.hpp>
 
 using namespace geode::prelude;
@@ -32,8 +33,10 @@ CCScene* IDListLayer::scene() {
 }
 
 bool dclEnabled = false;
-constexpr std::string_view ddlInfo = "The Denouement Demon List (DDL) is a ranking of demons.";
-constexpr std::string_view dclInfo = "The Denouement Challenge List (DCL) is a ranking of challenges.";
+constexpr std::string_view ddlInfo = "The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
+constexpr std::string_view dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
+constexpr std::string_view ddlPackInfo = "DDL Packs contain Series of levels from the Denouement Demon List that give more points ontop of the base points gained from beating the individual levels.";
+constexpr std::string_view dclPackInfo = "DCL Packs contain Series of levels from the Denouement Challenge List that give more points ontop of the base points gained from beating the individual Challenges.";
 
 bool IDListLayer::init() {
     if (!CCLayer::init()) return false;
@@ -73,7 +76,7 @@ bool IDListLayer::init() {
     m_countLabel->setID("level-count-label");
     addChild(m_countLabel);
 
-    m_list = GJListLayer::create(nullptr, dclEnabled ? "DCL" : "DDL", { 0, 0, 0, 180 }, 356.0f, 220.0f, 0);
+    m_list = GJListLayer::create(nullptr, "DDL", { 0, 0, 0, 180 }, 356.0f, 220.0f, 0);
     m_list->setPosition(winSize / 2.0f - m_list->getContentSize() / 2.0f);
     m_list->setID("GJListLayer");
     addChild(m_list, 2);
@@ -131,12 +134,18 @@ bool IDListLayer::init() {
     m_rightButton->setPosition(ccp(winSize.width - 24.0f, winSize.height / 2.0f));
     m_rightButton->setID("next-page-button");
     menu->addChild(m_rightButton);
-
-    m_infoButton = InfoAlertButton::create(dclEnabled ? "DCL" : "DDL",
-        dclEnabled ? gd::string(dclInfo.data(), dclInfo.size()) : gd::string(ddlInfo.data(), ddlInfo.size()), 1.0f);
+    
+    m_infoButton = InfoAlertButton::create("DDL", gd::string(ddlInfo), 1.0f);
     m_infoButton->setPosition(ccp(30.0f, 30.0f));
     m_infoButton->setID("info-button");
     menu->addChild(m_infoButton, 2);
+
+    auto modeSpr = ButtonSprite::create("View Packs", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.0f, 0.5f);
+    m_modeToggleBtn = CCMenuItemSpriteExtra::create(modeSpr, this, menu_selector(IDListLayer::onModeToggle));
+    
+    m_modeToggleBtn->setPosition(ccp(45.0f, 100.0f));
+    m_modeToggleBtn->setID("mode-toggle-button");
+    menu->addChild(m_modeToggleBtn, 2);
 
     m_ddlFailure = [this](int code) {
         FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load DDL. Please try again later.", "OK")->show();
@@ -155,7 +164,7 @@ bool IDListLayer::init() {
     menu->addChild(refreshButton, 2);
 
     auto starSprite = CCSprite::createWithSpriteFrameName("GJ_demonIcon_001.png");
-    starSprite->setScale(1.1f);
+    starSprite->setScale(1.2f);
     m_starToggle = CCMenuItemSpriteExtra::create(starSprite, this, menu_selector(IDListLayer::onStar));
     m_starToggle->setPosition(ccp(30.0f, 60.0f));
     m_starToggle->setColor(dclEnabled ? ccColor3B { 125, 125, 125 } : ccColor3B { 255, 255, 255 });
@@ -163,7 +172,7 @@ bool IDListLayer::init() {
     menu->addChild(m_starToggle, 2);
 
     auto moonSprite = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
-    moonSprite->setScale(1.1f);
+    moonSprite->setScale(1.2f);
     m_moonToggle = CCMenuItemSpriteExtra::create(moonSprite, this, menu_selector(IDListLayer::onMoon));
     m_moonToggle->setPosition(ccp(60.0f, 60.0f));
     m_moonToggle->setColor(dclEnabled ? ccColor3B { 255, 255, 255 } : ccColor3B { 125, 125, 125 });
@@ -223,27 +232,53 @@ bool IDListLayer::init() {
     m_loadingCircle->show();
 
     showLoading();
+    updateHeaders();
     setKeypadEnabled(true);
     setKeyboardEnabled(true);
 
-    if (dclEnabled && DDLIntegration::dclLoaded) {
-        populateList("");
-    }
-    else if (dclEnabled) {
+    if (dclEnabled) {
         DDLIntegration::loadDCL(m_dclListener, [this] {
-            populateList("");
+            DDLIntegration::loadDCLPacks(m_dclListener, [this] {
+                populateList("");
+            }, m_dclFailure);
         }, m_dclFailure);
-    }
-    else if (DDLIntegration::ddlLoaded) {
-        populateList("");
-    }
-    else {
+    } else {
         DDLIntegration::loadDDL(m_ddlListener, [this] {
-            populateList("");
+            DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
+                populateList("");
+            }, m_ddlFailure);
         }, m_ddlFailure);
     }
 
     return true;
+}
+
+void IDListLayer::updateHeaders() {
+    std::string titleStr = dclEnabled ? "DCL" : "DDL";
+    if (m_showingPacks) titleStr += " Packs";
+
+    if (auto listTitle = static_cast<CCLabelBMFont*>(m_list->getChildByID("title"))) {
+        listTitle->setString(titleStr.c_str());
+        listTitle->limitLabelWidth(280.0f, 0.8f, 0.0f);
+    }
+
+    m_infoButton->m_title = titleStr;
+    if (m_showingPacks) {
+        m_infoButton->m_description = dclEnabled ? gd::string(dclPackInfo) : gd::string(ddlPackInfo);
+    } else {
+        m_infoButton->m_description = dclEnabled ? gd::string(dclInfo) : gd::string(ddlInfo);
+    }
+}
+
+void IDListLayer::onModeToggle(CCObject* sender) {
+    m_showingPacks = !m_showingPacks;
+    
+    auto modeSpr = ButtonSprite::create(m_showingPacks ? "View Levels" : "View Packs", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.0f, 0.5f);
+    m_modeToggleBtn->setNormalImage(modeSpr);
+    
+    m_searchBar->setString("");
+    updateHeaders();
+    page(0);
 }
 
 void IDListLayer::onBack(CCObject* sender) {
@@ -260,15 +295,26 @@ void IDListLayer::onNextPage(CCObject* sender) {
 
 void IDListLayer::onRefresh(CCObject* sender) {
     showLoading();
-    if (dclEnabled) {
-        DDLIntegration::loadDCL(m_dclListener, [this] {
-            populateList(m_query);
-        }, m_dclFailure);
-    }
-    else {
-        DDLIntegration::loadDDL(m_ddlListener, [this] {
-            populateList(m_query);
-        }, m_ddlFailure);
+    if (m_showingPacks) {
+        if (dclEnabled) {
+            DDLIntegration::loadDCLPacks(m_dclListener, [this] {
+                populateList(m_query);
+            }, m_dclFailure);
+        } else {
+            DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
+                populateList(m_query);
+            }, m_ddlFailure);
+        }
+    } else {
+        if (dclEnabled) {
+            DDLIntegration::loadDCL(m_dclListener, [this] {
+                populateList(m_query);
+            }, m_dclFailure);
+        } else {
+            DDLIntegration::loadDDL(m_ddlListener, [this] {
+                populateList(m_query);
+            }, m_ddlFailure);
+        }
     }
 }
 
@@ -282,20 +328,16 @@ void IDListLayer::onStar(CCObject* sender) {
         bg->runAction(cocos2d::CCTintTo::create(0.5f, 76, 33, 69));
     }
 
+    updateHeaders();
     showLoading();
-    if (auto listTitle = static_cast<CCLabelBMFont*>(m_list->getChildByID("title"))) {
-        listTitle->setString("DDL");
-        listTitle->limitLabelWidth(280.0f, 0.8f, 0.0f);
-    }
-    m_infoButton->m_title = "DDL";
-    m_infoButton->m_description = gd::string(ddlInfo.data(), ddlInfo.size());
-    m_fullSearchResults.clear();
-    if (DDLIntegration::ddlLoaded) {
+    
+    if (DDLIntegration::ddlLoaded && !DDLIntegration::ddlPacks.empty()) {
         page(0);
-    }
-    else {
+    } else {
         DDLIntegration::loadDDL(m_ddlListener, [this] {
-            page(0);
+            DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
+                page(0);
+            }, m_ddlFailure);
         }, m_ddlFailure);
     }
 }
@@ -310,32 +352,71 @@ void IDListLayer::onMoon(CCObject* sender) {
         bg->runAction(cocos2d::CCTintTo::create(0.5f, 60, 18, 76));
     }
 
+    updateHeaders();
     showLoading();
-    if (auto listTitle = static_cast<CCLabelBMFont*>(m_list->getChildByID("title"))) {
-        listTitle->setString("DCL");
-        listTitle->limitLabelWidth(280.0f, 0.8f, 0.0f);
-    }
-    m_infoButton->m_title = "DCL";
-    m_infoButton->m_description = gd::string(dclInfo.data(), dclInfo.size());
-    m_fullSearchResults.clear();
-    if (DDLIntegration::dclLoaded) {
+    
+    if (DDLIntegration::dclLoaded && !DDLIntegration::dclPacks.empty()) {
         page(0);
-    }
-    else {
+    } else {
         DDLIntegration::loadDCL(m_dclListener, [this] {
-            page(0);
+            DDLIntegration::loadDCLPacks(m_dclListener, [this] {
+                page(0);
+            }, m_dclFailure);
         }, m_dclFailure);
     }
 }
 
+void IDListLayer::onSearch(CCObject* sender) {
+    auto query = m_searchBar->getString();
+    if (m_query != query) {
+        showLoading();
+        if (m_showingPacks) {
+            if (dclEnabled) {
+                DDLIntegration::loadDCLPacks(m_dclListener, [this, query] {
+                    m_page = 0;
+                    populateList(query);
+                }, m_dclFailure);
+            } else {
+                DDLIntegration::loadDDLPacks(m_ddlListener, [this, query] {
+                    m_page = 0;
+                    populateList(query);
+                }, m_ddlFailure);
+            }
+        } else {
+            if (dclEnabled) {
+                DDLIntegration::loadDCL(m_dclListener, [this, query] {
+                    m_page = 0;
+                    populateList(query);
+                }, m_dclFailure);
+            } else {
+                DDLIntegration::loadDDL(m_ddlListener, [this, query] {
+                    m_page = 0;
+                    populateList(query);
+                }, m_ddlFailure);
+            }
+        }
+    }
+}
+
+void IDListLayer::page(int page) {
+    size_t activeSize = m_showingPacks ? m_fullPackResults.size() : m_fullSearchResults.size();
+    auto maxPage = (activeSize + 9) / 10;
+    m_page = maxPage > 0 ? (maxPage + (page % maxPage)) % maxPage : 0;
+    showLoading();
+    populateList(m_query);
+}
+
 void IDListLayer::onPage(CCObject* sender) {
-    auto popup = SetIDPopup::create(m_page + 1, 1, (m_fullSearchResults.size() + 9) / 10, "Go to Page", "Go", true, 1, 60.0f, false, false);
+    size_t activeSize = m_showingPacks ? m_fullPackResults.size() : m_fullSearchResults.size();
+    auto popup = SetIDPopup::create(m_page + 1, 1, (activeSize + 9) / 10, "Go to Page", "Go", true, 1, 60.0f, false, false);
     popup->m_delegate = this;
     popup->show();
 }
 
 void IDListLayer::onRandom(CCObject* sender) {
-    page(random::generate(0uz, (m_fullSearchResults.size() - 1) / 10));
+    size_t activeSize = m_showingPacks ? m_fullPackResults.size() : m_fullSearchResults.size();
+    if (activeSize == 0) return;
+    page(random::generate(0uz, (activeSize - 1) / 10));
 }
 
 void IDListLayer::onFirst(CCObject* sender) {
@@ -343,7 +424,9 @@ void IDListLayer::onFirst(CCObject* sender) {
 }
 
 void IDListLayer::onLast(CCObject* sender) {
-    page((m_fullSearchResults.size() - 1) / 10);
+    size_t activeSize = m_showingPacks ? m_fullPackResults.size() : m_fullSearchResults.size();
+    if (activeSize == 0) return;
+    page((activeSize - 1) / 10);
 }
 
 void IDListLayer::showLoading() {
@@ -362,55 +445,115 @@ void IDListLayer::showLoading() {
 
 void IDListLayer::populateList(const std::string& query) {
     m_attemptedFetches.clear();
-    m_fullSearchResults.clear();
-    auto searchSprite = static_cast<CCSprite*>(m_searchButton->getNormalImage());
-    if (query.empty()) {
-        for (auto& level : dclEnabled ? DDLIntegration::dcl : DDLIntegration::ddl) {
-            m_fullSearchResults.push_back(fmt::to_string(level.id));
-        }
-        searchSprite->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName("gj_findBtn_001.png"));
-    }
-    else {
-        auto lowerQuery = string::toLower(query);
-        for (auto& level : dclEnabled ? DDLIntegration::dcl : DDLIntegration::ddl) {
-            if (!string::toLower(level.name).contains(lowerQuery)) continue;
-            m_fullSearchResults.push_back(fmt::to_string(level.id));
-        }
-        auto texture = CCTextureCache::get()->addImage("ID_findBtnOn_001.png"_spr, false);
-        searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
-    }
-
     m_query = query;
+    auto searchSprite = static_cast<CCSprite*>(m_searchButton->getNormalImage());
 
-    if (m_fullSearchResults.empty()) {
-        loadLevelsFinished(CCArray::create(), "", 0);
-        m_countLabel->setString("");
-    }
-    else {
-        auto glm = GameLevelManager::get();
-        glm->m_levelManagerDelegate = this;
+    if (m_showingPacks) {
+        m_fullPackResults.clear();
+        const auto& currentPacks = dclEnabled ? DDLIntegration::dclPacks : DDLIntegration::ddlPacks;
 
-        if (m_pageCache) m_pageCache->removeAllObjects();
+        if (query.empty()) {
+            m_fullPackResults = currentPacks;
+            searchSprite->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName("gj_findBtn_001.png"));
+        } else {
+            auto lowerQuery = string::toLower(query);
+            for (auto& pack : currentPacks) {
+                if (!string::toLower(pack.name).contains(lowerQuery)) continue;
+                m_fullPackResults.push_back(pack);
+            }
+            auto texture = CCTextureCache::get()->addImage("ID_findBtnOn_001.png"_spr, false);
+            searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
+        }
 
-        std::string idQuery = "";
-        auto start = m_fullSearchResults.begin() + m_page * 10;
-        auto end = std::min(m_fullSearchResults.end(), m_fullSearchResults.begin() + (m_page + 1) * 10);
-        for (auto it = start; it != end; ++it) {
-            if (it != start) idQuery += ",";
-            idQuery += *it;
+        if (auto listView = m_list->m_listView) {
+            listView->removeFromParent();
+            listView->release();
+        }
+
+        auto packs = CCArray::create();
+        auto start = m_page * 10;
+        auto size = m_fullPackResults.size();
+        auto end = std::min<int>(size, (m_page + 1) * 10);
+        
+        std::string packTypeString = dclEnabled ? "DCL Pack" : "DDL Pack";
+        
+        for (auto it = m_fullPackResults.begin() + start; it < m_fullPackResults.begin() + end; ++it) {
+            packs->addObject(IDPackCell::create(it->name, it->points, it->levels, it->color, packTypeString));
         }
         
-        auto searchObject = GJSearchObject::create(SearchType::Type19, idQuery);
+        auto listView = ListView::create(packs, 100.0f, 356.0f, 190.0f);
+        listView->retain();
+        m_list->addChild(listView, 6, 9);
+        m_list->m_listView = listView;
 
-        if (auto storedLevels = glm->getStoredOnlineLevels(searchObject->getKey())) {
-            loadLevelsFinished(storedLevels, "", 0);
-            setupPageInfo("", "");
+        m_searchBarMenu->setVisible(true);
+        if (size == 0) {
+            m_countLabel->setString("");
+        } else {
+            m_countLabel->setString(fmt::format("{} to {} of {}", start + 1, end, size).c_str());
         }
-        else glm->getOnlineLevels(searchObject);
+        m_countLabel->limitLabelWidth(100.0f, 0.6f, 0.0f);
+        m_countLabel->setVisible(true);
+        m_loadingCircle->setVisible(false);
+        
+        if (size > 10) {
+            auto maxPage = (size - 1) / 10;
+            m_leftButton->setVisible(m_page > 0);
+            m_rightButton->setVisible(m_page < maxPage);
+            m_firstButton->setVisible(m_page > 0);
+            m_lastButton->setVisible(m_page < maxPage);
+            m_pageButton->setVisible(true);
+            m_randomButton->setVisible(true);
+        }
+    } else {
+        m_fullSearchResults.clear();
+        if (query.empty()) {
+            for (auto& level : dclEnabled ? DDLIntegration::dcl : DDLIntegration::ddl) {
+                m_fullSearchResults.push_back(fmt::to_string(level.id));
+            }
+            searchSprite->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName("gj_findBtn_001.png"));
+        } else {
+            auto lowerQuery = string::toLower(query);
+            for (auto& level : dclEnabled ? DDLIntegration::dcl : DDLIntegration::ddl) {
+                if (!string::toLower(level.name).contains(lowerQuery)) continue;
+                m_fullSearchResults.push_back(fmt::to_string(level.id));
+            }
+            auto texture = CCTextureCache::get()->addImage("ID_findBtnOn_001.png"_spr, false);
+            searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
+        }
+
+        if (m_fullSearchResults.empty()) {
+            loadLevelsFinished(CCArray::create(), "", 0);
+            m_countLabel->setString("");
+        } else {
+            auto glm = GameLevelManager::get();
+            glm->m_levelManagerDelegate = this;
+
+            if (m_pageCache) m_pageCache->removeAllObjects();
+
+            std::string idQuery = "";
+            auto start = m_fullSearchResults.begin() + m_page * 10;
+            auto end = std::min(m_fullSearchResults.end(), m_fullSearchResults.begin() + (m_page + 1) * 10);
+            for (auto it = start; it != end; ++it) {
+                if (it != start) idQuery += ",";
+                idQuery += *it;
+            }
+            
+            auto searchObject = GJSearchObject::create(SearchType::Type19, idQuery);
+
+            if (auto storedLevels = glm->getStoredOnlineLevels(searchObject->getKey())) {
+                loadLevelsFinished(storedLevels, "", 0);
+                setupPageInfo("", "");
+            } else {
+                glm->getOnlineLevels(searchObject);
+            }
+        }
     }
 }
 
 void IDListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
+    if (m_showingPacks) return; 
+
     if (!m_pageCache) {
         m_pageCache = CCArray::create();
         m_pageCache->retain();
@@ -473,9 +616,8 @@ void IDListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
                     foundLevel->m_unlisted = true;
                     
                     foundLevel->m_stars = dclEnabled ? 0 : 10;
-                    foundLevel->m_demon = 0;
-                    foundLevel->m_ratingsSum = 50; 
-                    foundLevel->m_ratings = 10; 
+                    foundLevel->m_demon = 1;
+                    foundLevel->m_demonDifficulty = 5; 
                     foundLevel->m_levelLength = 3;
                     break;
                 }
@@ -508,39 +650,15 @@ void IDListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
 }
 
 void IDListLayer::loadLevelsFailed(const char*, int) {
+    if (m_showingPacks) return;
     loadLevelsFinished(nullptr, "", 0);
 }
 
 void IDListLayer::setupPageInfo(gd::string, const char*) {
+    if (m_showingPacks) return;
     m_countLabel->setString(fmt::format("{} to {} of {}", m_page * 10 + 1,
         std::min<int>(m_fullSearchResults.size(), (m_page + 1) * 10), m_fullSearchResults.size()).c_str());
     m_countLabel->limitLabelWidth(100.0f, 0.6f, 0.0f);
-}
-
-void IDListLayer::onSearch(CCObject* sender) {
-    auto query = m_searchBar->getString();
-    if (m_query != query) {
-        showLoading();
-        if (dclEnabled) {
-            DDLIntegration::loadDCL(m_dclListener, [this, query] {
-                m_page = 0;
-                populateList(query);
-            }, m_dclFailure);
-        }
-        else {
-            DDLIntegration::loadDDL(m_ddlListener, [this, query] {
-                m_page = 0;
-                populateList(query);
-            }, m_ddlFailure);
-        }
-    }
-}
-
-void IDListLayer::page(int page) {
-    auto maxPage = (m_fullSearchResults.size() + 9) / 10;
-    m_page = maxPage > 0 ? (maxPage + (page % maxPage)) % maxPage : 0;
-    showLoading();
-    populateList(m_query);
 }
 
 void IDListLayer::keyDown(enumKeyCodes key, double timestamp) {
@@ -567,7 +685,9 @@ void IDListLayer::keyBackClicked() {
 }
 
 void IDListLayer::setIDPopupClosed(SetIDPopup*, int page) {
-    m_page = std::clamp<int>(page - 1, 0, (m_fullSearchResults.size() - 1) / 10);
+    size_t activeSize = m_showingPacks ? m_fullPackResults.size() : m_fullSearchResults.size();
+    if (activeSize == 0) return;
+    m_page = std::clamp<int>(page - 1, 0, (activeSize - 1) / 10);
     showLoading();
     populateList(m_query);
 }

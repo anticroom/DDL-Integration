@@ -12,8 +12,8 @@
 
 using namespace geode::prelude;
 
-constexpr std::string_view ddlPackInfo = "DDL Packs contain curated sets of levels from the Denouement Demon List.";
-constexpr std::string_view dclPackInfo = "DCL Packs contain curated sets of levels from the Denouement Challenge List.";
+constexpr std::string_view ddlPackInfo = "DDL Packs contain Series of levels from the Denouement Demon List that give more points ontop of the base points gained from beating the individual levels.";
+constexpr std::string_view dclPackInfo = "DCL Packs contain Series of levels from the Denouement Challenge List that give more points ontop of the base points gained from beating the individual Challenges.";
 
 IDPackLayer* IDPackLayer::create() {
     auto ret = new IDPackLayer();

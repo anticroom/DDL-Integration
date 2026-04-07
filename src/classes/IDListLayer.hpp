@@ -3,6 +3,8 @@
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/utils/web.hpp>
 #include <set>
+#include "IDPackCell.hpp"
+#include "../DDLIntegration.hpp"
 
 class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
 public:
@@ -25,6 +27,7 @@ protected:
     cocos2d::CCLabelBMFont* m_countLabel;
     cocos2d::CCLabelBMFont* m_pageLabel;
     InfoAlertButton* m_infoButton;
+    
     CCMenuItemSpriteExtra* m_leftButton;
     CCMenuItemSpriteExtra* m_rightButton;
     CCMenuItemSpriteExtra* m_pageButton;
@@ -34,15 +37,23 @@ protected:
     CCMenuItemSpriteExtra* m_starToggle;
     CCMenuItemSpriteExtra* m_moonToggle;
     CCMenuItemSpriteExtra* m_searchButton;
+    CCMenuItemSpriteExtra* m_modeToggleBtn;
+
     cocos2d::CCArray* m_pageCache = nullptr;
     std::set<int> m_attemptedFetches;
     int m_page = 0;
     std::string m_query;
+    
+    bool m_showingPacks = false;
     std::vector<std::string> m_fullSearchResults;
+    std::vector<IDDemonPack> m_fullPackResults;
+    
     geode::CopyableFunction<void(int)> m_ddlFailure;
     geode::CopyableFunction<void(int)> m_dclFailure;
 
     bool init() override;
+    void updateHeaders();
+    void onModeToggle(cocos2d::CCObject*);
     void onSearch(cocos2d::CCObject*);
     void onBack(cocos2d::CCObject*);
     void onPrevPage(cocos2d::CCObject*);

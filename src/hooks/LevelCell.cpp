@@ -28,7 +28,7 @@ class $modify(IDLevelCell, LevelCell) {
         if (DDLIntegration::ddlLoaded) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
-                    rankStrings.push_back(fmt::format("#{} DDL", lvl.position));
+                    rankStrings.push_back(fmt::format("#{} DDL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
                     break;
                 }
             }
@@ -40,7 +40,7 @@ class $modify(IDLevelCell, LevelCell) {
         if (DDLIntegration::dclLoaded) {
             for (auto const& lvl : DDLIntegration::dcl) {
                 if (lvl.id == levelID) {
-                    rankStrings.push_back(fmt::format("#{} DCL", lvl.position));
+                    rankStrings.push_back(fmt::format("#{} DCL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
                     break;
                 }
             }
@@ -94,4 +94,4 @@ class $modify(IDLevelCell, LevelCell) {
             ));
         }
     }
-};
+};  
