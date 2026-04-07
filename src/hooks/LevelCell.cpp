@@ -1,0 +1,97 @@
+#include "../DDLIntegration.hpp"
+#include <Geode/binding/GJGameLevel.hpp>
+#include <Geode/modify/LevelCell.hpp>
+#include <Geode/utils/general.hpp>
+#include <jasmine/hook.hpp>
+#include <jasmine/setting.hpp>
+
+using namespace geode::prelude;
+
+static TaskHolder<web::WebResponse> s_ddlListener;
+static TaskHolder<web::WebResponse> s_dclListener;
+static bool s_fetchingDDL = false;
+static bool s_fetchingDCL = false;
+
+class $modify(IDLevelCell, LevelCell) {
+    static void onModify(ModifyBase<ModifyDerive<IDLevelCell, LevelCell>>& self) {
+        (void)self.setHookPriorityAfterPost("LevelCell::loadFromLevel", "hiimjustin000.level_size");
+        jasmine::hook::modify(self.m_hooks, "LevelCell::loadFromLevel", "enable-rank");
+    }
+
+    void loadFromLevel(GJGameLevel* level) {
+        LevelCell::loadFromLevel(level);
+        if (level->m_levelType == GJLevelType::Editor) return;
+
+        auto levelID = level->m_levelID.value();
+        std::vector<std::string> rankStrings;
+
+        if (DDLIntegration::ddlLoaded) {
+            for (auto const& lvl : DDLIntegration::ddl) {
+                if (lvl.id == levelID) {
+                    rankStrings.push_back(fmt::format("#{} DDL", lvl.position));
+                    break;
+                }
+            }
+        } else if (!s_fetchingDDL) {
+            s_fetchingDDL = true;
+            DDLIntegration::loadDDL(s_ddlListener, [](){ s_fetchingDDL = false; }, [](int){ s_fetchingDDL = false; });
+        }
+
+        if (DDLIntegration::dclLoaded) {
+            for (auto const& lvl : DDLIntegration::dcl) {
+                if (lvl.id == levelID) {
+                    rankStrings.push_back(fmt::format("#{} DCL", lvl.position));
+                    break;
+                }
+            }
+        } else if (!s_fetchingDCL) {
+            s_fetchingDCL = true;
+            DDLIntegration::loadDCL(s_dclListener, [](){ s_fetchingDCL = false; }, [](int){ s_fetchingDCL = false; });
+        }
+
+        if (!rankStrings.empty()) {
+            this->addRank(rankStrings);
+        }
+    }
+
+    void addRank(const std::vector<std::string>& ranks) {
+        if (m_mainLayer->getChildByID("level-rank-label"_spr)) return;
+
+        auto dailyLevel = m_level->m_dailyID.value() > 0;
+        auto isWhite = dailyLevel || jasmine::setting::getValue<bool>("white-rank");
+
+        geode::utils::StringBuffer<> positionsStr;
+        for (size_t i = 0; i < ranks.size(); ++i) {
+            if (i > 0) positionsStr.append(" / ");
+            positionsStr.append(ranks[i]);
+        }
+
+        auto rankTextNode = CCLabelBMFont::create(positionsStr.c_str(), "chatFont.fnt");
+        if (!rankTextNode) return;
+
+        rankTextNode->setPosition(ccp(346.0f, dailyLevel ? 6.0f : 1.0f));
+        rankTextNode->setAnchorPoint(ccp(1.0f, 0.0f));
+        rankTextNode->setScale(m_compactView ? 0.45f : 0.6f);
+
+        auto rlc = Loader::get()->getLoadedMod("raydeeux.revisedlevelcells");
+        if (rlc && rlc->getSettingValue<bool>("enabled") && rlc->getSettingValue<bool>("blendingText")) {
+            rankTextNode->setBlendFunc({ GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA });
+        }
+        else if (isWhite) {
+            rankTextNode->setOpacity(152);
+        }
+        else {
+            rankTextNode->setColor({ 51, 51, 51 });
+            rankTextNode->setOpacity(200);
+        }
+        rankTextNode->setID("level-rank-label"_spr);
+        m_mainLayer->addChild(rankTextNode);
+
+        if (auto levelSizeLabel = m_mainLayer->getChildByID("hiimjustin000.level_size/size-label")) {
+            levelSizeLabel->setPosition(ccp(
+                m_compactView ? 343.0f - rankTextNode->getScaledContentWidth() : 346.0f,
+                m_compactView ? 1.0f : 12.0f
+            ));
+        }
+    }
+};

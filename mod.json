@@ -1,0 +1,53 @@
+{
+    "geode": "5.5.3",
+    "gd": {
+        "android": "2.2081",
+        "win": "2.2081",
+        "mac": "2.2081",
+        "ios": "2.2081"
+    },
+    "version": "v1.0.0",
+    "id": "anticroom.ddl-integration",
+    "name": "DDL Integration",
+    "developer": "anticroom",
+    "description": "Simple DDL and DCL integration.",
+    "resources": {
+        "files": [
+            "resources/*.frag",
+            "resources/*.vert"
+        ],
+        "sprites": [
+            "resources/*.png"
+        ]
+    },
+    "settings": {
+        "enable-rank": {
+            "name": "Enable Demon Ranking Text",
+            "description": "Whether or not to display the demon ranking text.",
+            "type": "bool",
+            "default": true
+        },
+        "white-rank": {
+            "name": "White Demon Ranking Text",
+            "description": "Whether or not to display the demon ranking text in white.",
+            "type": "bool",
+            "enable-if": "enable-rank",
+            "default": false
+        }
+    },
+    "dependencies": {
+        "geode.node-ids": ">=v1.9.0"
+    },
+    "links": {
+        "community": "https://discord.com/invite/denouement",
+        "source": "https://github.com/hiimjasmine00/IntegratedDemonlist",
+        "homepage": "https://denouementdl.vercel.app"
+    },
+    "tags": [
+        "content",
+        "enhancement",
+        "interface",
+        "online",
+        "utility"
+    ]
+}
