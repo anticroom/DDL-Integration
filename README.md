@@ -18,11 +18,11 @@ Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denou
 - [anticroom](user:31192304) - Developer of the Denouement Integration fork
 
 ## Gallery
-![DDL](anticroom.ddl-integration/DDL.png?width=300)
+![DDL](resources/DDL.png)
 
-![DCL](anticroom.ddl-integration/DCL.png?width=300)
+![DCL](resources/DCL.png)
 
-![DDL Packs](anticroom.ddl-integration/DDL-packs.png?width=300)
+![DDL Packs](resources/DDL-packs.png)
 
 ## License
 This mod is licensed under the [MIT License](https://github.com/hiimjasmine00/IntegratedDemonlist/blob/master/LICENSE).

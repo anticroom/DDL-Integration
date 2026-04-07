@@ -49,7 +49,7 @@ bool IDListLayer::init() {
     bg->setScaleX((winSize.width + 10.0f) / bg->getTextureRect().size.width);
     bg->setScaleY((winSize.height + 10.0f) / bg->getTextureRect().size.height);
     bg->setPosition(ccp(-5.0f, -5.0f));
-    bg->setColor({ 51, 51, 51 });
+    bg->setColor({ 76, 33, 69 });
     bg->setID("background");
     addChild(bg);
 
@@ -154,7 +154,7 @@ bool IDListLayer::init() {
     refreshButton->setID("refresh-button");
     menu->addChild(refreshButton, 2);
 
-    auto starSprite = CCSprite::createWithSpriteFrameName("GJ_starsIcon_001.png");
+    auto starSprite = CCSprite::createWithSpriteFrameName("GJ_demonIcon_001.png");
     starSprite->setScale(1.1f);
     m_starToggle = CCMenuItemSpriteExtra::create(starSprite, this, menu_selector(IDListLayer::onStar));
     m_starToggle->setPosition(ccp(30.0f, 60.0f));
@@ -162,7 +162,7 @@ bool IDListLayer::init() {
     m_starToggle->setID("ddl-button");
     menu->addChild(m_starToggle, 2);
 
-    auto moonSprite = CCSprite::createWithSpriteFrameName("GJ_moonsIcon_001.png");
+    auto moonSprite = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
     moonSprite->setScale(1.1f);
     m_moonToggle = CCMenuItemSpriteExtra::create(moonSprite, this, menu_selector(IDListLayer::onMoon));
     m_moonToggle->setPosition(ccp(60.0f, 60.0f));
@@ -277,6 +277,11 @@ void IDListLayer::onStar(CCObject* sender) {
     dclEnabled = false;
     m_starToggle->setColor({ 255, 255, 255 });
     m_moonToggle->setColor({ 125, 125, 125 });
+
+    if (auto bg = getChildByID("background")) {
+        bg->runAction(cocos2d::CCTintTo::create(0.5f, 76, 33, 69));
+    }
+
     showLoading();
     if (auto listTitle = static_cast<CCLabelBMFont*>(m_list->getChildByID("title"))) {
         listTitle->setString("DDL");
@@ -300,6 +305,11 @@ void IDListLayer::onMoon(CCObject* sender) {
     dclEnabled = true;
     m_starToggle->setColor({ 125, 125, 125 });
     m_moonToggle->setColor({ 255, 255, 255 });
+
+    if (auto bg = getChildByID("background")) {
+        bg->runAction(cocos2d::CCTintTo::create(0.5f, 60, 18, 76));
+    }
+
     showLoading();
     if (auto listTitle = static_cast<CCLabelBMFont*>(m_list->getChildByID("title"))) {
         listTitle->setString("DCL");

@@ -35,12 +35,21 @@ bool IDPackCell::init(std::string_view name, double points, std::span<const int>
     setID("IDPackCell");
 
     m_levels.assign(levels.begin(), levels.end());
+    
+    bool isDCL = (packType == "DCL Pack" || packType == "DCL");
 
-    auto difficultySprite = CCSprite::createWithSpriteFrameName("difficulty_09_btn_001.png");
+    const char* faceSprite = isDCL ? "difficulty_05_btn_001.png" : "difficulty_09_btn_001.png";
+
+    auto difficultySprite = CCSprite::createWithSpriteFrameName(faceSprite);
     difficultySprite->setPosition(ccp(31.0f, 50.0f));
     difficultySprite->setScale(1.1f);
     difficultySprite->setID("difficulty-sprite");
     addChild(difficultySprite, 2);
+
+    auto diffText = CCLabelBMFont::create(isDCL ? "CHALLENGE" : "DEMON", "chatFont.fnt");
+    diffText->setPosition(ccp(31.0f, 15.0f));
+    diffText->setScale(isDCL ? 0.45f : 0.6f);
+    addChild(diffText, 2);
 
     if (auto shader = CCShaderCache::sharedShaderCache()->programForKey("pack-gradient"_spr)) {
         m_background = CCSprite::create("ID_background_001.png"_spr);
@@ -157,4 +166,4 @@ void IDPackCell::draw() {
     shader->setUniformsForBuiltins();
     shader->setUniformLocationWith1i(shader->getUniformLocationForName("colorMode"), m_colorMode);
     shader->setUniformLocationWith4fv(shader->getUniformLocationForName("colors"), reinterpret_cast<float*>(m_colors.data()), m_colors.size());
-}   
+}
