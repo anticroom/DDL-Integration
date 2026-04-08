@@ -25,3 +25,6 @@ Renamed all classes to be centered around the DDL instead of the ID (Integrated 
 
 # v1.2.5
 Small bugfixing and polishing.
+
+# v1.2.6
+Fixed unlisted levels not opening.

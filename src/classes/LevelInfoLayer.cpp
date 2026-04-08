@@ -52,9 +52,18 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
             auto facePlacement = CCLabelBMFont::create(fmt::format("#{}", bestRank).c_str(), "bigFont.fnt");
             
             if (auto diffSprite = this->getChildByID("difficulty-sprite")) {
+                float yOffset = 36.0f; 
+                
+                if (level->m_stars > 0) {
+                    yOffset += 18.0f; 
+                }
+                if (level->m_coins > 0) {
+                    yOffset += 18.0f; 
+                }
+                
                 facePlacement->setPosition({
                     diffSprite->getPositionX(),
-                    diffSprite->getPositionY() - 36.0f 
+                    diffSprite->getPositionY() - yOffset 
                 });
             } else {
                 auto winSize = CCDirector::get()->getWinSize();
@@ -69,6 +78,8 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
                 facePlacement->setColor({200, 200, 200});
             } else if (bestRank == 3) {
                 facePlacement->setColor({210, 140, 70});
+            } else if (bestRank > 150) {
+                facePlacement->setColor({255, 75, 75});
             } else {
                 facePlacement->setColor({255, 255, 255});
             }

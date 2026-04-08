@@ -1,5 +1,7 @@
 #include "../DDLIntegration.hpp"
 #include <Geode/binding/GJGameLevel.hpp>
+#include <Geode/binding/LevelBrowserLayer.hpp>
+#include <Geode/binding/GJSearchObject.hpp>
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/general.hpp>
 #include <jasmine/hook.hpp>
@@ -78,6 +80,20 @@ class $modify(DDLLevelCell, LevelCell) {
                 diffNode->getParent()->addChild(customFace);
             }
         }
+
+        if (level->m_unlisted && level->m_songID == 714579 && level->m_accountID == 0) {
+            if (auto menu = m_mainLayer->getChildByID("main-menu")) {
+                if (auto viewBtn = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("view-button"))) {
+                    viewBtn->setTarget(this, menu_selector(DDLLevelCell::onDummyUnlistedView));
+                }
+            }
+        }
+    }
+
+    void onDummyUnlistedView(CCObject* sender) {
+        auto searchObj = GJSearchObject::create(SearchType::Search, std::to_string(m_level->m_levelID.value()));
+        auto browser = LevelBrowserLayer::scene(searchObj);
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, browser));
     }
 
     void addRank(const std::vector<std::string>& ranks, int bestRank) {
@@ -114,10 +130,10 @@ class $modify(DDLLevelCell, LevelCell) {
             rankTextNode->setColor({255, 75, 75});
         } else {
             if (isWhite) {
-                rankTextNode->setOpacity(152);
+                rankTextNode->setOpacity(255);
             } else {
                 rankTextNode->setColor({ 255, 255, 255 });
-                rankTextNode->setOpacity(200);
+                rankTextNode->setOpacity(255);
             }
         }
         
