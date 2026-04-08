@@ -19,3 +19,6 @@ Fixed version missmatch
 
 # v1.2.3
 better use of nodeIDs and some cleanup with buggy code
+
+# v1.2.4
+Renamed all classes to be centered around the DDL instead of the ID (Integrated Demonlist) as requested from index staff.
