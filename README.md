@@ -23,5 +23,9 @@ Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denou
 
 ![DDL Leaderboard](resources/DDL-lb.png)
 
+## GEODE INDEX STAFF PLEASE READ!
+I've gotten permission from the orignal creator of the mod to be able to publish this!! I've gotten it rejected due to it being too similar to the original mod I forked from but I've did a lot of major changes and added a leaderboard to deviate away from being too similar
+[Proof of permission](resources/proof.png)
+
 ## License
 This mod is licensed under the [MIT License](https://github.com/hiimjasmine00/IntegratedDemonlist/blob/master/LICENSE).
