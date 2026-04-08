@@ -16,13 +16,10 @@ class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
         auto ddlButton = CCMenuItemSpriteExtra::create(ddlButtonSprite, this, menu_selector(DDLLevelSearchLayer::onDDLLevels));
         ddlButton->setID("ddl-button");
         
-        auto winSize = CCDirector::get()->getWinSize();
-        auto customMenu = CCMenu::create();
-        customMenu->setPosition(0, 0); 
-        ddlButton->setPosition(ccp(25.0f, winSize.height - 75.0f)); 
-        customMenu->addChild(ddlButton);
-        
-        addChild(customMenu);
+        if (auto menu = this->getChildByID("bottom-left-menu")) {
+            menu->addChild(ddlButton);
+            menu->updateLayout();
+        }
 
         return true;
     }

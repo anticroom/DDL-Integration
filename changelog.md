@@ -16,3 +16,6 @@ Added proper cross platform support.
 
 # v1.2.2
 Fixed version missmatch
+
+# v1.2.3
+better use of nodeIDs and some cleanup with buggy code

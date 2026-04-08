@@ -31,7 +31,7 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
         }
 
         if (bestRank != 99999) {
-            auto facePlacement = CCLabelBMFont::create(fmt::format("#", bestRank).c_str(), "bigFont.fnt");
+            auto facePlacement = CCLabelBMFont::create(fmt::format("#{}", bestRank).c_str(), "bigFont.fnt");
             
             if (auto diffSprite = this->getChildByID("difficulty-sprite")) {
                 facePlacement->setPosition({

@@ -265,6 +265,10 @@ void IDListLayer::onModeToggle(CCObject* sender) {
     m_modeToggleBtn->setNormalImage(modeSpr);
     
     m_searchBar->setString("");
+    m_query = "";
+    if (m_searchBar) {
+        m_searchBar->getInputNode()->detachWithIME();
+    }
     updateHeaders();
     
     if (m_viewMode == 2) {
@@ -296,6 +300,10 @@ void IDListLayer::onModeToggle(CCObject* sender) {
 }
 
 void IDListLayer::onBack(CCObject* sender) {
+    if (m_searchBar) {
+        m_searchBar->getInputNode()->detachWithIME();
+    }
+    
     CCDirector::get()->popSceneWithTransition(0.5f, kPopTransitionFade);
 }
 
@@ -408,6 +416,10 @@ void IDListLayer::onMoon(CCObject* sender) {
 }
 
 void IDListLayer::onSearch(CCObject* sender) {
+    if (m_searchBar) {
+        m_searchBar->getInputNode()->detachWithIME();
+    }
+
     auto query = m_searchBar->getString();
     if (m_query != query) {
         m_page = 0;
