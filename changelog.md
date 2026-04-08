@@ -10,3 +10,9 @@ Moved around everything and remade the visual elements in the packs to hopefully
 
 # v1.2.0
 Added a integrated leaderboard <3
+
+## v1.2.1
+Added proper cross platform support.
+
+# v1.2.2
+Fixed version missmatch
