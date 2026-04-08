@@ -33,8 +33,8 @@ CCScene* IDListLayer::scene() {
 }
 
 bool dclEnabled = false;
-constexpr std::string_view ddlInfo = "The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
-constexpr std::string_view dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
+const char* ddlInfo ="The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
+const char* dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
 
 bool IDListLayer::init() {
     if (!CCLayer::init()) return false;
