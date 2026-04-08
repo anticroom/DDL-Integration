@@ -17,9 +17,9 @@ Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denou
 - [anticroom](user:31192304) - Developer of the Denouement Integration fork
 
 ## Gallery
-![DDL](anticroom.ddl-integration/DDL.png)
+![DDL](resources/DDL.png)
 
-![DDL Packs](anticroom.ddl-integration/DDL-packs.png)
+![DDL Packs](resources/DDL-packs.png)
 
 ![DDL Leaderboard](resources/DDL-lb.png)
 
