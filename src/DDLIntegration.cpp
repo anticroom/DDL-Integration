@@ -1,5 +1,8 @@
 #include "DDLIntegration.hpp"
 #include <jasmine/web.hpp>
+#include <Geode/utils/file.hpp>
+#include <Geode/loader/Mod.hpp>
+#include <filesystem>
 #include <cmath>
 #include <map>
 #include <set>
@@ -27,14 +30,32 @@ double DDLIntegration::calculateScore(int rank) {
 }
 
 void DDLIntegration::loadDDL(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
+    auto cachePath = geode::Mod::get()->getSaveDir() / "ddl_cache.json";
+
     listener.spawn(
         web::WebRequest().get("https://denouementdl.vercel.app/api/levels?type=DDL"),
-        [failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
-            if (!res.ok()) return failure(res.code());
+        [cachePath, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
+            if (res.ok()) {
+                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+            }
+
+            std::string jsonStr;
+            if (res.ok()) {
+                jsonStr = res.string().unwrapOr("[]");
+            } else if (std::filesystem::exists(cachePath)) {
+                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
+            } else {
+                return failure(res.code());
+            }
+
+            auto parsed = matjson::parse(jsonStr);
+            if (!parsed.isOk()) return failure(500);
+
             ddlLoaded = true;
             ddl.clear();
             int index = 1;
-            for (auto& level : jasmine::web::getArray(res)) {
+            
+            for (auto& level : parsed.unwrap().asArray().unwrap()) {
                 auto id = level.get<int>("id");
                 auto name = level.get<std::string>("name");
                 auto uid = level.get<std::string>("_id");
@@ -49,14 +70,32 @@ void DDLIntegration::loadDDL(TaskHolder<web::WebResponse>& listener, Function<vo
 }
 
 void DDLIntegration::loadDCL(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
+    auto cachePath = geode::Mod::get()->getSaveDir() / "dcl_cache.json";
+
     listener.spawn(
         web::WebRequest().get("https://denouementdl.vercel.app/api/levels?type=DCL"),
-        [failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
-            if (!res.ok()) return failure(res.code());
+        [cachePath, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
+            if (res.ok()) {
+                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+            }
+
+            std::string jsonStr;
+            if (res.ok()) {
+                jsonStr = res.string().unwrapOr("[]");
+            } else if (std::filesystem::exists(cachePath)) {
+                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
+            } else {
+                return failure(res.code());
+            }
+
+            auto parsed = matjson::parse(jsonStr);
+            if (!parsed.isOk()) return failure(500);
+
             dclLoaded = true;
             dcl.clear();
             int index = 1;
-            for (auto& level : jasmine::web::getArray(res)) {
+
+            for (auto& level : parsed.unwrap().asArray().unwrap()) {
                 auto id = level.get<int>("id");
                 auto name = level.get<std::string>("name");
                 auto uid = level.get<std::string>("_id");
@@ -71,12 +110,29 @@ void DDLIntegration::loadDCL(TaskHolder<web::WebResponse>& listener, Function<vo
 }
 
 void DDLIntegration::loadDDLPacks(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
+    auto cachePath = geode::Mod::get()->getSaveDir() / "ddl_packs_cache.json";
+
     listener.spawn(
         web::WebRequest().get("https://denouementdl.vercel.app/api/packs?type=DDL"),
-        [failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
-            if (!res.ok()) return failure(res.code());
+        [cachePath, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
+            if (res.ok()) {
+                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+            }
+
+            std::string jsonStr;
+            if (res.ok()) {
+                jsonStr = res.string().unwrapOr("[]");
+            } else if (std::filesystem::exists(cachePath)) {
+                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
+            } else {
+                return failure(res.code());
+            }
+
+            auto parsed = matjson::parse(jsonStr);
+            if (!parsed.isOk()) return failure(500);
+
             ddlPacks.clear();
-            for (auto& pack : jasmine::web::getArray(res)) {
+            for (auto& pack : parsed.unwrap().asArray().unwrap()) {
                 auto name = pack.get<std::string>("name");
                 auto levelsUidRes = pack.get<std::vector<matjson::Value>>("levels");
                 auto color = pack.get<std::string>("color").unwrapOr("#ffffff");
@@ -103,12 +159,29 @@ void DDLIntegration::loadDDLPacks(TaskHolder<web::WebResponse>& listener, Functi
 }
 
 void DDLIntegration::loadDCLPacks(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
+    auto cachePath = geode::Mod::get()->getSaveDir() / "dcl_packs_cache.json";
+
     listener.spawn(
         web::WebRequest().get("https://denouementdl.vercel.app/api/packs?type=DCL"),
-        [failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
-            if (!res.ok()) return failure(res.code());
+        [cachePath, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable {
+            if (res.ok()) {
+                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+            }
+
+            std::string jsonStr;
+            if (res.ok()) {
+                jsonStr = res.string().unwrapOr("[]");
+            } else if (std::filesystem::exists(cachePath)) {
+                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
+            } else {
+                return failure(res.code());
+            }
+
+            auto parsed = matjson::parse(jsonStr);
+            if (!parsed.isOk()) return failure(500);
+
             dclPacks.clear();
-            for (auto& pack : jasmine::web::getArray(res)) {
+            for (auto& pack : parsed.unwrap().asArray().unwrap()) {
                 auto name = pack.get<std::string>("name");
                 auto levelsUidRes = pack.get<std::vector<matjson::Value>>("levels");
                 auto color = pack.get<std::string>("color").unwrapOr("#ffffff");

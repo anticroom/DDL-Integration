@@ -1,6 +1,5 @@
-#include "../classes/DDLListLayer.hpp" // Changed from IDListLayer.hpp
+#include "../classes/DDLListLayer.hpp"
 #include <Geode/modify/LevelSearchLayer.hpp>
-#include <Geode/ui/BasedButtonSprite.hpp>
 
 using namespace geode::prelude;
 
@@ -8,15 +7,14 @@ class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
     bool init(int searchType) {
         if (!LevelSearchLayer::init(searchType)) return false;
 
-        auto spr = CCSprite::create("DDL_demonBtn_001.png"_spr);
-        spr->setScale(0.85f);
+        auto ddlButtonSprite = CCSprite::create("ddl-btn.png"_spr);
         
-        auto ddlButtonSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::Small);
-        ddlButtonSprite->getTopNode()->setScale(1.0f);
-        ddlButtonSprite->setScale(0.85f);
+        ddlButtonSprite->setScale(1.0f); 
         
         auto ddlButton = CCMenuItemSpriteExtra::create(ddlButtonSprite, this, menu_selector(DDLLevelSearchLayer::onDDLLevels));
-        ddlButton->setID("ddl-button");
+        
+        ddlButton->setID("ddl-search-button");
+        ddlButton->setTag(1);
         
         if (auto menu = this->getChildByID("bottom-left-menu")) {
             menu->addChild(ddlButton);

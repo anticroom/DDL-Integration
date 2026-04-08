@@ -2,6 +2,7 @@
 #include <Geode/binding/AppDelegate.hpp>
 #include <Geode/binding/CustomListView.hpp>
 #include <Geode/binding/GameLevelManager.hpp>
+#include <Geode/binding/GameStatsManager.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
 #include <Geode/binding/GJListLayer.hpp>
 #include <Geode/binding/InfoAlertButton.hpp>
@@ -155,8 +156,8 @@ bool DDLListLayer::init() {
     refreshButton->setID("refresh-button");
     menu->addChild(refreshButton, 2);
 
-    auto starSprite = CCSprite::createWithSpriteFrameName("GJ_demonIcon_001.png");
-    starSprite->setScale(1.2f);
+    auto starSprite = CCSprite::create("ddl-btn.png"_spr);
+    starSprite->setScale(0.80f);
     m_starToggle = CCMenuItemSpriteExtra::create(starSprite, this, menu_selector(DDLListLayer::onStar));
     m_starToggle->setPosition(ccp(30.0f, 60.0f));
     m_starToggle->setColor(dclEnabled ? ccColor3B { 125, 125, 125 } : ccColor3B { 255, 255, 255 });
@@ -598,6 +599,7 @@ void DDLListLayer::populateList(const std::string& query) {
         }
     } else {
         m_fullSearchResults.clear();
+        
         if (query.empty()) {
             for (auto& level : dclEnabled ? DDLIntegration::dcl : DDLIntegration::ddl) {
                 m_fullSearchResults.push_back(fmt::to_string(level.id));
@@ -682,7 +684,7 @@ void DDLListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     size_t start = m_page * 10;
     size_t end = std::min<size_t>(m_fullSearchResults.size(), start + 10);
 
-for (size_t i = start; i < end; i++) {
+    for (size_t i = start; i < end; i++) {
         int expectedID = 0;
         
         if (auto parsed = geode::utils::numFromString<int>(m_fullSearchResults[i])) {
@@ -710,10 +712,14 @@ for (size_t i = start; i < end; i++) {
                     foundLevel->m_levelID = demon.id;
                     foundLevel->m_levelName = demon.name;
                     foundLevel->m_creatorName = demon.author;
+                    foundLevel->m_accountID = 0;
+                    foundLevel->m_userID = 0;
                     foundLevel->m_levelType = GJLevelType::Saved;
                     foundLevel->m_unlisted = true;
                     foundLevel->m_stars = dclEnabled ? 0 : 10;
                     foundLevel->m_demon = 1;
+                    foundLevel->m_songID = 714579; 
+                    foundLevel->m_audioTrack = 0;   
                     foundLevel->m_demonDifficulty = 5; 
                     foundLevel->m_levelLength = 3;
                     break;

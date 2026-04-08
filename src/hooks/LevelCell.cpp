@@ -54,6 +54,29 @@ class $modify(DDLLevelCell, LevelCell) {
 
         if (!rankStrings.empty()) {
             this->addRank(rankStrings, bestRank);
+            
+            CCNode* diffNode = m_mainLayer->getChildByID("difficulty-sprite");
+            if (!diffNode) {
+                if (auto container = m_mainLayer->getChildByID("difficulty-container")) {
+                    diffNode = container->getChildByID("difficulty-sprite");
+                }
+            }
+            
+            if (diffNode && !diffNode->getParent()->getChildByID("ddl-custom-face")) {
+                diffNode->setVisible(false);
+
+                auto customFace = CCSprite::create("ddl-demon.png"_spr);
+                customFace->setID("ddl-custom-face");
+                customFace->setPosition(diffNode->getPosition());
+                
+                float targetHeight = diffNode->getScaledContentSize().height;
+                if (targetHeight < 10.0f) targetHeight = 35.0f; 
+                
+                customFace->setScale(targetHeight / customFace->getContentSize().height);
+                customFace->setZOrder(diffNode->getZOrder());
+
+                diffNode->getParent()->addChild(customFace);
+            }
         }
     }
 
@@ -87,6 +110,8 @@ class $modify(DDLLevelCell, LevelCell) {
             rankTextNode->setColor({200, 200, 200});
         } else if (bestRank == 3) {
             rankTextNode->setColor({210, 140, 70});
+        } else if (bestRank > 150) {
+            rankTextNode->setColor({255, 75, 75});
         } else {
             if (isWhite) {
                 rankTextNode->setOpacity(152);
