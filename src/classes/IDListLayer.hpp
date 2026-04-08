@@ -1,9 +1,11 @@
+#pragma once
 #include <Geode/binding/LevelManagerDelegate.hpp>
 #include <Geode/binding/SetIDPopupDelegate.hpp>
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/utils/web.hpp>
 #include <set>
 #include "IDPackCell.hpp"
+#include "IDLeaderboardCell.hpp"
 #include "../DDLIntegration.hpp"
 
 class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
@@ -19,6 +21,8 @@ public:
 protected:
     geode::async::TaskHolder<geode::utils::web::WebResponse> m_ddlListener;
     geode::async::TaskHolder<geode::utils::web::WebResponse> m_dclListener;
+    geode::async::TaskHolder<geode::utils::web::WebResponse> m_lboardListener;
+    
     GJListLayer* m_list;
     cocos2d::CCLabelBMFont* m_listLabel;
     LoadingCircle* m_loadingCircle;
@@ -44,12 +48,12 @@ protected:
     int m_page = 0;
     std::string m_query;
     
-    bool m_showingPacks = false;
+    int m_viewMode = 0;
     std::vector<std::string> m_fullSearchResults;
     std::vector<IDDemonPack> m_fullPackResults;
+    std::vector<IDLeaderboardEntry> m_fullLeaderboardResults;
     
-    geode::CopyableFunction<void(int)> m_ddlFailure;
-    geode::CopyableFunction<void(int)> m_dclFailure;
+    geode::CopyableFunction<void(int)> m_failure;
 
     bool init() override;
     void updateHeaders();

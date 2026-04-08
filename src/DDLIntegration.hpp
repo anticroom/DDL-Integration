@@ -1,4 +1,7 @@
+#pragma once
 #include <Geode/utils/web.hpp>
+#include <vector>
+#include <string>
 
 struct IDListDemon {
     int id = 0;
@@ -25,11 +28,27 @@ struct IDDemonPack {
         : name(name), color(color), levels(levels), points(points) {}
 };
 
+struct IDLeaderboardEntry {
+    std::string user;
+    double points = 0.0;
+    std::vector<std::string> completedPacks;
+    double packPoints = 0.0;
+    std::vector<std::string> verifiedLevels;
+    double verifiedPoints = 0.0;
+    std::vector<std::string> completedLevels;
+    double completedPoints = 0.0;
+    int rank = 0;
+};
+
 namespace DDLIntegration {
     extern std::vector<IDListDemon> ddl;
     extern std::vector<IDDemonPack> ddlPacks;
+    extern std::vector<IDLeaderboardEntry> ddlLeaderboard;
+    
     extern std::vector<IDListDemon> dcl;
     extern std::vector<IDDemonPack> dclPacks;
+    extern std::vector<IDLeaderboardEntry> dclLeaderboard;
+    
     extern bool ddlLoaded;
     extern bool dclLoaded;
 
@@ -37,5 +56,7 @@ namespace DDLIntegration {
     void loadDDLPacks(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
     void loadDCL(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
     void loadDCLPacks(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
+    void loadLeaderboard(bool isDcl, geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
+    
     double calculateScore(int rank);
 }

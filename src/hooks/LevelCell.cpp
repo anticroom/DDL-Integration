@@ -24,11 +24,13 @@ class $modify(IDLevelCell, LevelCell) {
 
         auto levelID = level->m_levelID.value();
         std::vector<std::string> rankStrings;
+        int bestRank = 99999;
 
         if (DDLIntegration::ddlLoaded) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
                     rankStrings.push_back(fmt::format("#{} DDL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
+                    if (lvl.position < bestRank) bestRank = lvl.position;
                     break;
                 }
             }
@@ -41,6 +43,7 @@ class $modify(IDLevelCell, LevelCell) {
             for (auto const& lvl : DDLIntegration::dcl) {
                 if (lvl.id == levelID) {
                     rankStrings.push_back(fmt::format("#{} DCL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
+                    if (lvl.position < bestRank) bestRank = lvl.position;
                     break;
                 }
             }
@@ -50,11 +53,11 @@ class $modify(IDLevelCell, LevelCell) {
         }
 
         if (!rankStrings.empty()) {
-            this->addRank(rankStrings);
+            this->addRank(rankStrings, bestRank);
         }
     }
 
-    void addRank(const std::vector<std::string>& ranks) {
+    void addRank(const std::vector<std::string>& ranks, int bestRank) {
         if (m_mainLayer->getChildByID("level-rank-label"_spr)) return;
 
         auto dailyLevel = m_level->m_dailyID.value() > 0;
@@ -66,24 +69,33 @@ class $modify(IDLevelCell, LevelCell) {
             positionsStr.append(ranks[i]);
         }
 
-        auto rankTextNode = CCLabelBMFont::create(positionsStr.c_str(), "chatFont.fnt");
+        auto rankTextNode = CCLabelBMFont::create(positionsStr.c_str(), "bigFont.fnt");
         if (!rankTextNode) return;
 
-        rankTextNode->setPosition(ccp(346.0f, dailyLevel ? 6.0f : 1.0f));
+        rankTextNode->setPosition(ccp(346.0f, dailyLevel ? 6.0f : 2.0f));
         rankTextNode->setAnchorPoint(ccp(1.0f, 0.0f));
-        rankTextNode->setScale(m_compactView ? 0.45f : 0.6f);
+        rankTextNode->setScale(m_compactView ? 0.25f : 0.35f);
 
         auto rlc = Loader::get()->getLoadedMod("raydeeux.revisedlevelcells");
         if (rlc && rlc->getSettingValue<bool>("enabled") && rlc->getSettingValue<bool>("blendingText")) {
             rankTextNode->setBlendFunc({ GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA });
         }
-        else if (isWhite) {
-            rankTextNode->setOpacity(152);
+        
+        if (bestRank == 1) {
+            rankTextNode->setColor({255, 200, 50});
+        } else if (bestRank == 2) {
+            rankTextNode->setColor({200, 200, 200});
+        } else if (bestRank == 3) {
+            rankTextNode->setColor({210, 140, 70});
+        } else {
+            if (isWhite) {
+                rankTextNode->setOpacity(152);
+            } else {
+                rankTextNode->setColor({ 255, 255, 255 });
+                rankTextNode->setOpacity(200);
+            }
         }
-        else {
-            rankTextNode->setColor({ 51, 51, 51 });
-            rankTextNode->setOpacity(200);
-        }
+        
         rankTextNode->setID("level-rank-label"_spr);
         m_mainLayer->addChild(rankTextNode);
 
@@ -94,4 +106,4 @@ class $modify(IDLevelCell, LevelCell) {
             ));
         }
     }
-};  
+};
