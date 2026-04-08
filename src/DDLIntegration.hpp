@@ -28,7 +28,7 @@ struct IDDemonPack {
         : name(name), color(color), levels(levels), points(points) {}
 };
 
-struct IDLeaderboardEntry {
+struct DDLLeaderboardEntry {
     std::string user;
     double points = 0.0;
     std::vector<std::string> completedPacks;
@@ -43,11 +43,11 @@ struct IDLeaderboardEntry {
 namespace DDLIntegration {
     extern std::vector<IDListDemon> ddl;
     extern std::vector<IDDemonPack> ddlPacks;
-    extern std::vector<IDLeaderboardEntry> ddlLeaderboard;
+    extern std::vector<DDLLeaderboardEntry> ddlLeaderboard;
     
     extern std::vector<IDListDemon> dcl;
     extern std::vector<IDDemonPack> dclPacks;
-    extern std::vector<IDLeaderboardEntry> dclLeaderboard;
+    extern std::vector<DDLLeaderboardEntry> dclLeaderboard;
     
     extern bool ddlLoaded;
     extern bool dclLoaded;

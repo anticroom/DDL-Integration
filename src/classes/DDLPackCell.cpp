@@ -1,4 +1,4 @@
-#include "IDPackCell.hpp"
+#include "DDLPackCell.hpp"
 #include <Geode/binding/ButtonSprite.hpp>
 #include <Geode/binding/GameStatsManager.hpp>
 #include <Geode/binding/LevelBrowserLayer.hpp>
@@ -20,9 +20,8 @@ ccColor3B hexToRgb(const std::string& hex) {
     }
     return { 255, 255, 255 };
 }
-
-IDPackCell* IDPackCell::create(std::string_view name, double points, std::span<const int> levels, std::string_view colorHex, std::string_view packType) {
-    auto ret = new IDPackCell();
+DDLPackCell* DDLPackCell::create(std::string_view name, double points, std::span<const int> levels, std::string_view colorHex, std::string_view packType) {
+    auto ret = new DDLPackCell();
     if (ret->init(name, points, levels, colorHex, packType)) {
         ret->autorelease();
         return ret;
@@ -31,10 +30,10 @@ IDPackCell* IDPackCell::create(std::string_view name, double points, std::span<c
     return nullptr;
 }
 
-bool IDPackCell::init(std::string_view name, double points, std::span<const int> levels, std::string_view colorHex, std::string_view packType) {
+bool DDLPackCell::init(std::string_view name, double points, std::span<const int> levels, std::string_view colorHex, std::string_view packType) {
     if (!CCLayer::init()) return false;
 
-    setID("IDPackCell");
+    setID("DDLPackCell");
     setContentSize({ 356.0f, 100.0f });
 
     m_levels.assign(levels.begin(), levels.end());
@@ -126,7 +125,7 @@ bool IDPackCell::init(std::string_view name, double points, std::span<const int>
     viewSprite->setScale(0.6f);
     
     auto viewMenu = CCMenu::create();
-    auto viewButton = CCMenuItemSpriteExtra::create(viewSprite, this, menu_selector(IDPackCell::onClick));
+    auto viewButton = CCMenuItemSpriteExtra::create(viewSprite, this, menu_selector(DDLPackCell::onClick));
     viewButton->setID("view-button");
     viewMenu->addChild(viewButton);
     viewMenu->setPosition(ccp(335.0f, 50.0f));
@@ -144,7 +143,7 @@ bool IDPackCell::init(std::string_view name, double points, std::span<const int>
     return true;
 }
 
-void IDPackCell::onClick(CCObject* sender) {
+void DDLPackCell::onClick(CCObject* sender) {
     if (m_levels.empty()) return;
 
     g_currentPackName = m_packName;

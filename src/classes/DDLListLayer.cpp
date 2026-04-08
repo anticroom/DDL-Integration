@@ -1,4 +1,4 @@
-#include "IDListLayer.hpp"
+#include "DDLListLayer.hpp"
 #include <Geode/binding/AppDelegate.hpp>
 #include <Geode/binding/CustomListView.hpp>
 #include <Geode/binding/GameLevelManager.hpp>
@@ -15,8 +15,8 @@
 
 using namespace geode::prelude;
 
-IDListLayer* IDListLayer::create() {
-    auto ret = new IDListLayer();
+DDLListLayer* DDLListLayer::create() {
+    auto ret = new DDLListLayer();
     if (ret->init()) {
         ret->autorelease();
         return ret;
@@ -25,10 +25,10 @@ IDListLayer* IDListLayer::create() {
     return nullptr;
 }
 
-CCScene* IDListLayer::scene() {
+CCScene* DDLListLayer::scene() {
     auto ret = CCScene::create();
     AppDelegate::get()->m_runningScene = ret;
-    ret->addChild(IDListLayer::create());
+    ret->addChild(DDLListLayer::create());
     return ret;
 }
 
@@ -36,10 +36,10 @@ bool dclEnabled = false;
 const char* ddlInfo ="The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
 const char* dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
 
-bool IDListLayer::init() {
+bool DDLListLayer::init() {
     if (!CCLayer::init()) return false;
 
-    setID("IDListLayer");
+    setID("DDLListLayer");
     auto winSize = CCDirector::get()->getWinSize();
 
     m_pageCache = CCArray::create();
@@ -91,7 +91,7 @@ bool IDListLayer::init() {
 
     auto searchSprite = CCSprite::createWithSpriteFrameName("gj_findBtn_001.png");
     searchSprite->setScale(0.7f);
-    m_searchButton = CCMenuItemSpriteExtra::create(searchSprite, this, menu_selector(IDListLayer::onSearch));
+    m_searchButton = CCMenuItemSpriteExtra::create(searchSprite, this, menu_selector(DDLListLayer::onSearch));
     m_searchButton->setPosition(ccp(337.0f, 15.0f));
     m_searchButton->setID("search-button");
     m_searchBarMenu->addChild(m_searchButton);
@@ -114,21 +114,21 @@ bool IDListLayer::init() {
     addChild(menu);
 
     auto backButton = CCMenuItemSpriteExtra::create(
-        CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png"), this, menu_selector(IDListLayer::onBack)
+        CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png"), this, menu_selector(DDLListLayer::onBack)
     );
     backButton->setPosition(ccp(25.0f, winSize.height - 25.0f));
     backButton->setID("back-button");
     menu->addChild(backButton);
 
     auto leftBtnSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png");
-    m_leftButton = CCMenuItemSpriteExtra::create(leftBtnSpr, this, menu_selector(IDListLayer::onPrevPage));
+    m_leftButton = CCMenuItemSpriteExtra::create(leftBtnSpr, this, menu_selector(DDLListLayer::onPrevPage));
     m_leftButton->setPosition(ccp(24.0f, winSize.height / 2.0f));
     m_leftButton->setID("prev-page-button");
     menu->addChild(m_leftButton);
 
     auto rightBtnSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png");
     rightBtnSpr->setFlipX(true);
-    m_rightButton = CCMenuItemSpriteExtra::create(rightBtnSpr, this, menu_selector(IDListLayer::onNextPage));
+    m_rightButton = CCMenuItemSpriteExtra::create(rightBtnSpr, this, menu_selector(DDLListLayer::onNextPage));
     m_rightButton->setPosition(ccp(winSize.width - 24.0f, winSize.height / 2.0f));
     m_rightButton->setID("next-page-button");
     menu->addChild(m_rightButton);
@@ -139,7 +139,7 @@ bool IDListLayer::init() {
     menu->addChild(m_infoButton, 2);
 
     auto modeSpr = ButtonSprite::create("View Packs", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.0f, 0.5f);
-    m_modeToggleBtn = CCMenuItemSpriteExtra::create(modeSpr, this, menu_selector(IDListLayer::onModeToggle));
+    m_modeToggleBtn = CCMenuItemSpriteExtra::create(modeSpr, this, menu_selector(DDLListLayer::onModeToggle));
     m_modeToggleBtn->setPosition(ccp(45.0f, 100.0f));
     m_modeToggleBtn->setID("mode-toggle-button");
     menu->addChild(m_modeToggleBtn, 2);
@@ -150,14 +150,14 @@ bool IDListLayer::init() {
     };
 
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
-    auto refreshButton = CCMenuItemSpriteExtra::create(refreshBtnSpr, this, menu_selector(IDListLayer::onRefresh));
+    auto refreshButton = CCMenuItemSpriteExtra::create(refreshBtnSpr, this, menu_selector(DDLListLayer::onRefresh));
     refreshButton->setPosition(ccp(winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f));
     refreshButton->setID("refresh-button");
     menu->addChild(refreshButton, 2);
 
     auto starSprite = CCSprite::createWithSpriteFrameName("GJ_demonIcon_001.png");
     starSprite->setScale(1.2f);
-    m_starToggle = CCMenuItemSpriteExtra::create(starSprite, this, menu_selector(IDListLayer::onStar));
+    m_starToggle = CCMenuItemSpriteExtra::create(starSprite, this, menu_selector(DDLListLayer::onStar));
     m_starToggle->setPosition(ccp(30.0f, 60.0f));
     m_starToggle->setColor(dclEnabled ? ccColor3B { 125, 125, 125 } : ccColor3B { 255, 255, 255 });
     m_starToggle->setID("ddl-button");
@@ -165,7 +165,7 @@ bool IDListLayer::init() {
 
     auto moonSprite = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
     moonSprite->setScale(1.2f);
-    m_moonToggle = CCMenuItemSpriteExtra::create(moonSprite, this, menu_selector(IDListLayer::onMoon));
+    m_moonToggle = CCMenuItemSpriteExtra::create(moonSprite, this, menu_selector(DDLListLayer::onMoon));
     m_moonToggle->setPosition(ccp(60.0f, 60.0f));
     m_moonToggle->setColor(dclEnabled ? ccColor3B { 255, 255, 255 } : ccColor3B { 125, 125, 125 });
     m_moonToggle->setID("dcl-button");
@@ -177,14 +177,14 @@ bool IDListLayer::init() {
     m_pageLabel->setScale(0.8f);
     m_pageLabel->setPosition(pageBtnSpr->getContentSize() / 2.0f);
     pageBtnSpr->addChild(m_pageLabel);
-    m_pageButton = CCMenuItemSpriteExtra::create(pageBtnSpr, this, menu_selector(IDListLayer::onPage));
+    m_pageButton = CCMenuItemSpriteExtra::create(pageBtnSpr, this, menu_selector(DDLListLayer::onPage));
     m_pageButton->setPositionY(winSize.height - 39.5f);
     m_pageButton->setID("page-button");
     menu->addChild(m_pageButton);
 
     auto randomSprite = CCSprite::create("BI_randomBtn_001.png"_spr);
     randomSprite->setScale(0.9f);
-    m_randomButton = CCMenuItemSpriteExtra::create(randomSprite, this, menu_selector(IDListLayer::onRandom));
+    m_randomButton = CCMenuItemSpriteExtra::create(randomSprite, this, menu_selector(DDLListLayer::onRandom));
     m_randomButton->setPositionY(m_pageButton->getPositionY() - m_pageButton->getContentHeight() / 2.0f - m_randomButton->getContentHeight() / 2.0f - 5.0f);
     m_randomButton->setID("random-button");
     menu->addChild(m_randomButton);
@@ -196,7 +196,7 @@ bool IDListLayer::init() {
     otherLastArrow->setFlipX(true);
     lastArrow->addChild(otherLastArrow);
     lastArrow->setScale(0.4f);
-    m_lastButton = CCMenuItemSpriteExtra::create(lastArrow, this, menu_selector(IDListLayer::onLast));
+    m_lastButton = CCMenuItemSpriteExtra::create(lastArrow, this, menu_selector(DDLListLayer::onLast));
     m_lastButton->setPositionY(m_randomButton->getPositionY() - m_randomButton->getContentHeight() / 2.0f - m_lastButton->getContentHeight() / 2.0f - 5.0f);
     m_lastButton->setID("last-button");
     menu->addChild(m_lastButton);
@@ -211,7 +211,7 @@ bool IDListLayer::init() {
     otherFirstArrow->setPosition(firstArrow->getContentSize() / 2.0f - ccp(20.0f, 0.0f));
     firstArrow->addChild(otherFirstArrow);
     firstArrow->setScale(0.4f);
-    m_firstButton = CCMenuItemSpriteExtra::create(firstArrow, this, menu_selector(IDListLayer::onFirst));
+    m_firstButton = CCMenuItemSpriteExtra::create(firstArrow, this, menu_selector(DDLListLayer::onFirst));
     m_firstButton->setPosition(ccp(21.5f, m_lastButton->getPositionY()));
     m_firstButton->setID("first-button");
     menu->addChild(m_firstButton);
@@ -243,7 +243,7 @@ bool IDListLayer::init() {
     return true;
 }
 
-void IDListLayer::updateHeaders() {
+void DDLListLayer::updateHeaders() {
     std::string titleStr = dclEnabled ? "DCL" : "DDL";
     if (m_viewMode == 1) titleStr += " Packs";
     else if (m_viewMode == 2) titleStr += " Leaderboard";
@@ -254,7 +254,7 @@ void IDListLayer::updateHeaders() {
     }
 }
 
-void IDListLayer::onModeToggle(CCObject* sender) {
+void DDLListLayer::onModeToggle(CCObject* sender) {
     m_viewMode = (m_viewMode + 1) % 3;
     
     std::string btnText = "View Packs";
@@ -299,7 +299,7 @@ void IDListLayer::onModeToggle(CCObject* sender) {
     }
 }
 
-void IDListLayer::onBack(CCObject* sender) {
+void DDLListLayer::onBack(CCObject* sender) {
     if (m_searchBar) {
         m_searchBar->getInputNode()->detachWithIME();
     }
@@ -307,15 +307,15 @@ void IDListLayer::onBack(CCObject* sender) {
     CCDirector::get()->popSceneWithTransition(0.5f, kPopTransitionFade);
 }
 
-void IDListLayer::onPrevPage(CCObject* sender) {
+void DDLListLayer::onPrevPage(CCObject* sender) {
     page(m_page - 1);
 }
 
-void IDListLayer::onNextPage(CCObject* sender) {
+void DDLListLayer::onNextPage(CCObject* sender) {
     page(m_page + 1);
 }
 
-void IDListLayer::onRefresh(CCObject* sender) {
+void DDLListLayer::onRefresh(CCObject* sender) {
     showLoading();
     if (m_viewMode == 2) {
         if (dclEnabled) {
@@ -347,7 +347,7 @@ void IDListLayer::onRefresh(CCObject* sender) {
     }
 }
 
-void IDListLayer::onStar(CCObject* sender) {
+void DDLListLayer::onStar(CCObject* sender) {
     if (!dclEnabled) return;
     dclEnabled = false;
     m_starToggle->setColor({ 255, 255, 255 });
@@ -381,7 +381,7 @@ void IDListLayer::onStar(CCObject* sender) {
     }
 }
 
-void IDListLayer::onMoon(CCObject* sender) {
+void DDLListLayer::onMoon(CCObject* sender) {
     if (dclEnabled) return;
     dclEnabled = true;
     m_starToggle->setColor({ 125, 125, 125 });
@@ -415,7 +415,7 @@ void IDListLayer::onMoon(CCObject* sender) {
     }
 }
 
-void IDListLayer::onSearch(CCObject* sender) {
+void DDLListLayer::onSearch(CCObject* sender) {
     if (m_searchBar) {
         m_searchBar->getInputNode()->detachWithIME();
     }
@@ -428,7 +428,7 @@ void IDListLayer::onSearch(CCObject* sender) {
     }
 }
 
-void IDListLayer::page(int page) {
+void DDLListLayer::page(int page) {
     size_t activeSize = 0;
     if (m_viewMode == 0) activeSize = m_fullSearchResults.size();
     else if (m_viewMode == 1) activeSize = m_fullPackResults.size();
@@ -440,7 +440,7 @@ void IDListLayer::page(int page) {
     populateList(m_query);
 }
 
-void IDListLayer::onPage(CCObject* sender) {
+void DDLListLayer::onPage(CCObject* sender) {
     size_t activeSize = 0;
     if (m_viewMode == 0) activeSize = m_fullSearchResults.size();
     else if (m_viewMode == 1) activeSize = m_fullPackResults.size();
@@ -451,7 +451,7 @@ void IDListLayer::onPage(CCObject* sender) {
     popup->show();
 }
 
-void IDListLayer::onRandom(CCObject* sender) {
+void DDLListLayer::onRandom(CCObject* sender) {
     size_t activeSize = 0;
     if (m_viewMode == 0) activeSize = m_fullSearchResults.size();
     else if (m_viewMode == 1) activeSize = m_fullPackResults.size();
@@ -461,11 +461,11 @@ void IDListLayer::onRandom(CCObject* sender) {
     page(random::generate(0uz, (activeSize - 1) / 10));
 }
 
-void IDListLayer::onFirst(CCObject* sender) {
+void DDLListLayer::onFirst(CCObject* sender) {
     page(0);
 }
 
-void IDListLayer::onLast(CCObject* sender) {
+void DDLListLayer::onLast(CCObject* sender) {
     size_t activeSize = 0;
     if (m_viewMode == 0) activeSize = m_fullSearchResults.size();
     else if (m_viewMode == 1) activeSize = m_fullPackResults.size();
@@ -475,7 +475,7 @@ void IDListLayer::onLast(CCObject* sender) {
     page((activeSize - 1) / 10);
 }
 
-void IDListLayer::showLoading() {
+void DDLListLayer::showLoading() {
     m_pageLabel->setString(fmt::to_string(m_page + 1).c_str());
     m_loadingCircle->setVisible(true);
     if (auto listView = m_list->m_listView) listView->setVisible(false);
@@ -489,7 +489,7 @@ void IDListLayer::showLoading() {
     m_randomButton->setVisible(false);
 }
 
-void IDListLayer::populateList(const std::string& query) {
+void DDLListLayer::populateList(const std::string& query) {
     m_attemptedFetches.clear();
     m_query = query;
     auto searchSprite = static_cast<CCSprite*>(m_searchButton->getNormalImage());
@@ -513,7 +513,7 @@ void IDListLayer::populateList(const std::string& query) {
                 if (!string::toLower(entry.user).contains(lowerQuery)) continue;
                 m_fullLeaderboardResults.push_back(entry);
             }
-            auto texture = CCTextureCache::get()->addImage("ID_findBtnOn_001.png"_spr, false);
+            auto texture = CCTextureCache::get()->addImage("DDL_findBtnOn_001.png"_spr, false);
             searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
         }
 
@@ -523,7 +523,7 @@ void IDListLayer::populateList(const std::string& query) {
         auto end = std::min<int>(size, (m_page + 1) * 10);
         
         for (auto it = m_fullLeaderboardResults.begin() + start; it < m_fullLeaderboardResults.begin() + end; ++it) {
-            cells->addObject(IDLeaderboardCell::create(*it));
+            cells->addObject(DDLLeaderboardCell::create(*it));
         }
         
         auto listView = ListView::create(cells, 35.0f, 356.0f, 190.0f);
@@ -561,7 +561,7 @@ void IDListLayer::populateList(const std::string& query) {
                 if (!string::toLower(pack.name).contains(lowerQuery)) continue;
                 m_fullPackResults.push_back(pack);
             }
-            auto texture = CCTextureCache::get()->addImage("ID_findBtnOn_001.png"_spr, false);
+            auto texture = CCTextureCache::get()->addImage("DDL_findBtnOn_001.png"_spr, false);
             searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
         }
 
@@ -572,7 +572,7 @@ void IDListLayer::populateList(const std::string& query) {
         std::string packTypeString = dclEnabled ? "DCL Pack" : "DDL Pack";
         
         for (auto it = m_fullPackResults.begin() + start; it < m_fullPackResults.begin() + end; ++it) {
-            packs->addObject(IDPackCell::create(it->name, it->points, it->levels, it->color, packTypeString));
+            packs->addObject(DDLPackCell::create(it->name, it->points, it->levels, it->color, packTypeString));
         }
         
         auto listView = ListView::create(packs, 100.0f, 356.0f, 190.0f);
@@ -609,7 +609,7 @@ void IDListLayer::populateList(const std::string& query) {
                 if (!string::toLower(level.name).contains(lowerQuery)) continue;
                 m_fullSearchResults.push_back(fmt::to_string(level.id));
             }
-            auto texture = CCTextureCache::get()->addImage("ID_findBtnOn_001.png"_spr, false);
+            auto texture = CCTextureCache::get()->addImage("DDL_findBtnOn_001.png"_spr, false);
             searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
         }
 
@@ -642,7 +642,7 @@ void IDListLayer::populateList(const std::string& query) {
     }
 }
 
-void IDListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
+void DDLListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     if (m_viewMode != 0) return; 
 
     if (levels && levels->count() > 0) {
@@ -682,9 +682,12 @@ void IDListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     size_t start = m_page * 10;
     size_t end = std::min<size_t>(m_fullSearchResults.size(), start + 10);
 
-    for (size_t i = start; i < end; i++) {
+for (size_t i = start; i < end; i++) {
         int expectedID = 0;
-        try { expectedID = std::stoi(m_fullSearchResults[i]); } catch (...) {}
+        
+        if (auto parsed = geode::utils::numFromString<int>(m_fullSearchResults[i])) {
+            expectedID = parsed.unwrap();
+        }
 
         GJGameLevel* foundLevel = nullptr;
 
@@ -740,19 +743,19 @@ void IDListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     }
 }
 
-void IDListLayer::loadLevelsFailed(const char*, int) {
+void DDLListLayer::loadLevelsFailed(const char*, int) {
     if (m_viewMode != 0) return;
     loadLevelsFinished(nullptr, "", 0);
 }
 
-void IDListLayer::setupPageInfo(gd::string, const char*) {
+void DDLListLayer::setupPageInfo(gd::string, const char*) {
     if (m_viewMode != 0) return;
     m_countLabel->setString(fmt::format("{} to {} of {}", m_page * 10 + 1,
         std::min<int>(m_fullSearchResults.size(), (m_page + 1) * 10), m_fullSearchResults.size()).c_str());
     m_countLabel->limitLabelWidth(100.0f, 0.6f, 0.0f);
 }
 
-void IDListLayer::keyDown(enumKeyCodes key, double timestamp) {
+void DDLListLayer::keyDown(enumKeyCodes key, double timestamp) {
     switch (key) {
         case KEY_Left:
         case CONTROLLER_Left:
@@ -771,11 +774,11 @@ void IDListLayer::keyDown(enumKeyCodes key, double timestamp) {
     }
 }
 
-void IDListLayer::keyBackClicked() {
+void DDLListLayer::keyBackClicked() {
     onBack(nullptr);
 }
 
-void IDListLayer::setIDPopupClosed(SetIDPopup*, int page) {
+void DDLListLayer::setIDPopupClosed(SetIDPopup*, int page) {
     size_t activeSize = 0;
     if (m_viewMode == 0) activeSize = m_fullSearchResults.size();
     else if (m_viewMode == 1) activeSize = m_fullPackResults.size();
@@ -787,7 +790,7 @@ void IDListLayer::setIDPopupClosed(SetIDPopup*, int page) {
     populateList(m_query);
 }
 
-IDListLayer::~IDListLayer() {
+DDLListLayer::~DDLListLayer() {
     if (m_pageCache) {
         m_pageCache->release();
         m_pageCache = nullptr;

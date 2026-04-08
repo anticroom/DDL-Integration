@@ -12,8 +12,8 @@ static TaskHolder<web::WebResponse> s_dclListener;
 static bool s_fetchingDDL = false;
 static bool s_fetchingDCL = false;
 
-class $modify(IDLevelCell, LevelCell) {
-    static void onModify(ModifyBase<ModifyDerive<IDLevelCell, LevelCell>>& self) {
+class $modify(DDLLevelCell, LevelCell) {
+    static void onModify(ModifyBase<ModifyDerive<DDLLevelCell, LevelCell>>& self) {
         (void)self.setHookPriorityAfterPost("LevelCell::loadFromLevel", "hiimjustin000.level_size");
         jasmine::hook::modify(self.m_hooks, "LevelCell::loadFromLevel", "enable-rank");
     }

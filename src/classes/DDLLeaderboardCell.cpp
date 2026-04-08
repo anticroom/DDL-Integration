@@ -1,11 +1,11 @@
-#include "IDLeaderboardCell.hpp"
+#include "DDLLeaderboardCell.hpp"
 #include <Geode/binding/ButtonSprite.hpp>
 #include <Geode/binding/FLAlertLayer.hpp>
 
 using namespace geode::prelude;
 
-IDLeaderboardCell* IDLeaderboardCell::create(const IDLeaderboardEntry& entry) {
-    auto ret = new IDLeaderboardCell();
+DDLLeaderboardCell* DDLLeaderboardCell::create(const DDLLeaderboardEntry& entry) {
+    auto ret = new DDLLeaderboardCell();
     if (ret->init(entry)) {
         ret->autorelease();
         return ret;
@@ -14,7 +14,7 @@ IDLeaderboardCell* IDLeaderboardCell::create(const IDLeaderboardEntry& entry) {
     return nullptr;
 }
 
-bool IDLeaderboardCell::init(const IDLeaderboardEntry& entry) {
+bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry) {
     if (!CCLayer::init()) return false;
     
     m_entry = entry;
@@ -58,7 +58,7 @@ bool IDLeaderboardCell::init(const IDLeaderboardEntry& entry) {
     auto infoSpr = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     infoSpr->setScale(0.65f);
     
-    auto btn = CCMenuItemSpriteExtra::create(infoSpr, this, menu_selector(IDLeaderboardCell::onInfo));
+    auto btn = CCMenuItemSpriteExtra::create(infoSpr, this, menu_selector(DDLLeaderboardCell::onInfo));
     auto menu = CCMenu::create();
     menu->addChild(btn);
     menu->setPosition(ccp(342.0f, 17.5f));
@@ -67,7 +67,7 @@ bool IDLeaderboardCell::init(const IDLeaderboardEntry& entry) {
     return true;
 }
 
-void IDLeaderboardCell::onInfo(CCObject*) {
+void DDLLeaderboardCell::onInfo(CCObject*) {
     std::string infoStr = "";
     
     infoStr += fmt::format("<cy>Verifications:</c> {}  (<cg>{:.2f} pts</c>)\n\n", 

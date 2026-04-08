@@ -4,20 +4,20 @@
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/utils/web.hpp>
 #include <set>
-#include "IDPackCell.hpp"
-#include "IDLeaderboardCell.hpp"
+#include "DDLLeaderboardCell.hpp"
+#include "DDLPackCell.hpp"
 #include "../DDLIntegration.hpp"
 
-class IDListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
+class DDLListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
 public:
-    static IDListLayer* create();
+    static DDLListLayer* create();
     static cocos2d::CCScene* scene();
 
     void page(int);
     void keyDown(cocos2d::enumKeyCodes, double) override;
     void keyBackClicked() override;
 
-    ~IDListLayer() override;
+    ~DDLListLayer() override;
 protected:
     geode::async::TaskHolder<geode::utils::web::WebResponse> m_ddlListener;
     geode::async::TaskHolder<geode::utils::web::WebResponse> m_dclListener;
@@ -51,7 +51,7 @@ protected:
     int m_viewMode = 0;
     std::vector<std::string> m_fullSearchResults;
     std::vector<IDDemonPack> m_fullPackResults;
-    std::vector<IDLeaderboardEntry> m_fullLeaderboardResults;
+    std::vector<DDLLeaderboardEntry> m_fullLeaderboardResults;
     
     geode::CopyableFunction<void(int)> m_failure;
 

@@ -1,4 +1,4 @@
-#include "../classes/IDListLayer.hpp"
+#include "../classes/DDLListLayer.hpp" // Changed from IDListLayer.hpp
 #include <Geode/modify/LevelSearchLayer.hpp>
 #include <Geode/ui/BasedButtonSprite.hpp>
 
@@ -8,7 +8,9 @@ class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
     bool init(int searchType) {
         if (!LevelSearchLayer::init(searchType)) return false;
 
-        auto spr = CCSprite::create("ID_demonBtn_001.png"_spr);
+        auto spr = CCSprite::create("DDL_demonBtn_001.png"_spr);
+        spr->setScale(0.85f);
+        
         auto ddlButtonSprite = CircleButtonSprite::create(spr, CircleBaseColor::Green, CircleBaseSize::Small);
         ddlButtonSprite->getTopNode()->setScale(1.0f);
         ddlButtonSprite->setScale(0.85f);
@@ -25,6 +27,6 @@ class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
     }
 
     void onDDLLevels(CCObject* sender) {
-        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, IDListLayer::scene()));
+        CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, DDLListLayer::scene()));
     }
 };

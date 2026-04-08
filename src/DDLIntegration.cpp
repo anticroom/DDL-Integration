@@ -9,11 +9,11 @@ using namespace geode::prelude;
 
 std::vector<IDListDemon> DDLIntegration::ddl;
 std::vector<IDDemonPack> DDLIntegration::ddlPacks;
-std::vector<IDLeaderboardEntry> DDLIntegration::ddlLeaderboard;
+std::vector<DDLLeaderboardEntry> DDLIntegration::ddlLeaderboard;
 
 std::vector<IDListDemon> DDLIntegration::dcl;
 std::vector<IDDemonPack> DDLIntegration::dclPacks;
-std::vector<IDLeaderboardEntry> DDLIntegration::dclLeaderboard;
+std::vector<DDLLeaderboardEntry> DDLIntegration::dclLeaderboard;
 
 bool DDLIntegration::ddlLoaded = false;
 bool DDLIntegration::dclLoaded = false;
@@ -147,7 +147,7 @@ namespace {
         double completedPoints = 0.0;
     };
 
-    std::vector<IDLeaderboardEntry> computeLeaderboardData(const matjson::Value& res, bool isDcl) {
+    std::vector<DDLLeaderboardEntry> computeLeaderboardData(const matjson::Value& res, bool isDcl) {
         std::map<std::string, UserTempData> userMap;
         if (!res.isArray()) return {};
 
@@ -223,7 +223,7 @@ namespace {
             }
         }
 
-        std::vector<IDLeaderboardEntry> result;
+        std::vector<DDLLeaderboardEntry> result;
         for (auto& [key, user] : userMap) {
             if (!user.completedLevels.empty() || !user.verifiedLevels.empty() || !user.packs.empty()) {
                 result.push_back({
