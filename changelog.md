@@ -31,3 +31,6 @@ Fixed unlisted levels not opening.
 
 # v1.2.7
 Improved DDL demon faces with proper sprites and set multiple custom DDL difficulties based on placement.
+
+# v1.2.8
+Fixed particles crashing on some devices. (I'm just bad at coding stuff)
