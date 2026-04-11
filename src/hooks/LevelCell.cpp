@@ -2,6 +2,7 @@
 #include <Geode/binding/GJGameLevel.hpp>
 #include <Geode/binding/LevelBrowserLayer.hpp>
 #include <Geode/binding/GJSearchObject.hpp>
+#include <Geode/binding/GJDifficultySprite.hpp>
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/utils/general.hpp>
 #include <jasmine/hook.hpp>
@@ -32,6 +33,7 @@ class $modify(DDLLevelCell, LevelCell) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
                     rankStrings.push_back(fmt::format("#{} DDL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
+                    
                     if (lvl.position < bestRank) bestRank = lvl.position;
                     break;
                 }
@@ -64,33 +66,95 @@ class $modify(DDLLevelCell, LevelCell) {
                 }
             }
             
-            if (diffNode && !diffNode->getParent()->getChildByID("ddl-custom-face")) {
+            if (diffNode && !diffNode->getParent()->getChildByID("ddl-face-node")) {
                 diffNode->setVisible(false);
 
-                auto customFace = CCSprite::create("ddl-demon.png"_spr);
-                customFace->setID("ddl-custom-face");
-                customFace->setPosition(diffNode->getPosition());
+                auto customNode = CCNode::create();
+                customNode->setID("ddl-face-node");
+                customNode->setPosition(diffNode->getPosition());
+                customNode->setAnchorPoint({0.5f, 0.5f});
                 
-                float targetHeight = diffNode->getScaledContentSize().height;
-                if (targetHeight < 10.0f) targetHeight = 35.0f; 
-                
-                customFace->setScale(targetHeight / customFace->getContentSize().height);
-                customFace->setZOrder(diffNode->getZOrder());
+                std::string faceSprite = "DDL_difficulty_09_btn_001.png"_spr;
+                std::string ringSprite = "GJ_featuredCoin_001.png";
 
-                diffNode->getParent()->addChild(customFace);
+                if (bestRank == 1) {
+                    faceSprite = "DDL_difficulty_10_btn_001.png"_spr;
+                    ringSprite = "GJ_epicCoin3_001.png";
+                } else if (bestRank == 2) {
+                    faceSprite = "DDL_difficulty_10_btn_001.png"_spr;
+                    ringSprite = "GJ_epicCoin2_001.png";
+                } else if (bestRank == 3) {
+                    faceSprite = "DDL_difficulty_10_btn_001.png"_spr;
+                    ringSprite = "GJ_epicCoin_001.png";
+                }   
+
+                auto ring = CCSprite::createWithSpriteFrameName(ringSprite.c_str());
+                auto face = CCSprite::create(faceSprite.c_str());
+                
+                auto fakeDDLRateFace = CCSprite::createWithSpriteFrameName("difficulty_09_btn_001.png");
+
+                if (ring && face && fakeDDLRateFace) {
+                    customNode->setContentSize(fakeDDLRateFace->getContentSize());
+                    
+                    ring->setPosition(customNode->getContentSize() / 2.0f);
+                    face->setPosition(customNode->getContentSize() / 2.0f);
+
+                    face->setScaleX(fakeDDLRateFace->getContentSize().width / face->getContentSize().width);
+                    face->setScaleY(fakeDDLRateFace->getContentSize().height / face->getContentSize().height);
+                    
+                    ring->setScale(1.0f); 
+                    
+                    customNode->addChild(ring, -1);
+                    customNode->addChild(face, 0);
+
+                    if (bestRank <= 3) {
+                        auto fakeDDLRateLevel = GJGameLevel::create();
+                        fakeDDLRateLevel->m_featured = 1;
+                        if (bestRank == 1) fakeDDLRateLevel->m_isEpic = 3;      
+                        else if (bestRank == 2) fakeDDLRateLevel->m_isEpic = 2; 
+                        else if (bestRank == 3) fakeDDLRateLevel->m_isEpic = 1; 
+
+                        auto fakeDDLRateSprite = GJDifficultySprite::create(1, static_cast<GJDifficultyName>(0));
+                        fakeDDLRateSprite->updateFeatureStateFromLevel(fakeDDLRateLevel);
+
+                        if (fakeDDLRateSprite->getChildrenCount() > 1) {
+                            if (auto pNode = static_cast<cocos2d::CCParticleSystemQuad*>(fakeDDLRateSprite->getChildren()->objectAtIndex(1))) {
+                                pNode->retain();
+                                
+                                pNode->removeFromParentAndCleanup(false); 
+                                
+                                pNode->setPosition(customNode->getContentSize() / 2.0f);
+                                customNode->addChild(pNode, -2); 
+                                
+                                pNode->resetSystem();
+                                pNode->resumeSystem();
+                                
+                                pNode->release();
+                            }
+                        }
+                    }
+
+                    float targetHeight = diffNode->getScaledContentSize().height;
+                    if (targetHeight < 10.0f) targetHeight = 35.0f; 
+                    
+                    customNode->setScale(targetHeight / customNode->getContentSize().height);
+                    customNode->setZOrder(diffNode->getZOrder());
+
+                    diffNode->getParent()->addChild(customNode);
+                }
             }
         }
 
         if (level->m_unlisted && level->m_songID == 714579 && level->m_accountID == 0) {
             if (auto menu = m_mainLayer->getChildByID("main-menu")) {
                 if (auto viewBtn = typeinfo_cast<CCMenuItemSpriteExtra*>(menu->getChildByID("view-button"))) {
-                    viewBtn->setTarget(this, menu_selector(DDLLevelCell::onDummyUnlistedView));
+                    viewBtn->setTarget(this, menu_selector(DDLLevelCell::onFakeDDLUnlistedView));
                 }
             }
         }
     }
 
-    void onDummyUnlistedView(CCObject* sender) {
+    void onFakeDDLUnlistedView(CCObject* sender) {
         auto searchObj = GJSearchObject::create(SearchType::Search, std::to_string(m_level->m_levelID.value()));
         auto browser = LevelBrowserLayer::scene(searchObj);
         CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, browser));

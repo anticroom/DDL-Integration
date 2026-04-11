@@ -6,16 +6,12 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v1.2.6",
+    "version": "v1.2.7",
     "id": "anticroom.ddl-integration",
     "name": "DDL Integration",
     "developer": "anticroom",
     "description": "Simple DDL and DCL integration.",
     "resources": {
-        "files": [
-            "resources/*.frag",
-            "resources/*.vert"
-        ],
         "sprites": [
             "resources/*.png"
         ]

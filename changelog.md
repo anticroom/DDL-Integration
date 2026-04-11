@@ -28,3 +28,6 @@ Small bugfixing and polishing.
 
 # v1.2.6
 Fixed unlisted levels not opening.
+
+# v1.2.7
+Improved DDL demon faces with proper sprites and set multiple custom DDL difficulties based on placement.
