@@ -82,17 +82,11 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
                             fakeDDLRateSprite->updateFeatureStateFromLevel(fakeDDLRateLevel);
 
                             if (fakeDDLRateSprite->getChildrenCount() > 1) {
-                                if (auto pNode = static_cast<cocos2d::CCParticleSystemQuad*>(fakeDDLRateSprite->getChildren()->objectAtIndex(1))) {
+                                if (auto pNode = static_cast<cocos2d::CCNode*>(fakeDDLRateSprite->getChildren()->objectAtIndex(1))) {
                                     pNode->retain();
-                                    
-                                    pNode->removeFromParentAndCleanup(false); 
-                                    
+                                    pNode->removeFromParentAndCleanup(false);
                                     pNode->setPosition(customNode->getContentSize() / 2.0f);
-                                    customNode->addChild(pNode, -2); 
-                                    
-                                    pNode->resetSystem();
-                                    pNode->resumeSystem();
-                                    
+                                    customNode->addChild(pNode, -2);
                                     pNode->release();
                                 }
                             }

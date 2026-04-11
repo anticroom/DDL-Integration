@@ -33,7 +33,6 @@ class $modify(DDLLevelCell, LevelCell) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
                     rankStrings.push_back(fmt::format("#{} DDL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
-                    
                     if (lvl.position < bestRank) bestRank = lvl.position;
                     break;
                 }
@@ -118,17 +117,11 @@ class $modify(DDLLevelCell, LevelCell) {
                         fakeDDLRateSprite->updateFeatureStateFromLevel(fakeDDLRateLevel);
 
                         if (fakeDDLRateSprite->getChildrenCount() > 1) {
-                            if (auto pNode = static_cast<cocos2d::CCParticleSystemQuad*>(fakeDDLRateSprite->getChildren()->objectAtIndex(1))) {
+                            if (auto pNode = static_cast<cocos2d::CCNode*>(fakeDDLRateSprite->getChildren()->objectAtIndex(1))) {
                                 pNode->retain();
-                                
-                                pNode->removeFromParentAndCleanup(false); 
-                                
+                                pNode->removeFromParentAndCleanup(false);
                                 pNode->setPosition(customNode->getContentSize() / 2.0f);
                                 customNode->addChild(pNode, -2); 
-                                
-                                pNode->resetSystem();
-                                pNode->resumeSystem();
-                                
                                 pNode->release();
                             }
                         }
