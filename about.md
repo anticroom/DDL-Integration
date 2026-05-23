@@ -1,5 +1,6 @@
 # Denouement Demon List Integration
 Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denouement Challenge List](https://denouementdl.vercel.app/#/DCL) integration.
+If you want to check our out community then come join our [Discord](https://discord.gg/denouement)! 
 
 ## Features
 - A new button in the level search screen that opens the integrated lists and leaderboard.
