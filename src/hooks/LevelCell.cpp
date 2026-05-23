@@ -28,12 +28,16 @@ class $modify(DDLLevelCell, LevelCell) {
         auto levelID = level->m_levelID.value();
         std::vector<std::string> rankStrings;
         int bestRank = 99999;
+        std::string bestSource = "";
 
         if (DDLIntegration::ddlLoaded) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
                     rankStrings.push_back(fmt::format("#{} DDL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
-                    if (lvl.position < bestRank) bestRank = lvl.position;
+                    if (lvl.position < bestRank) {
+                        bestRank = lvl.position;
+                        bestSource = "DDL";
+                    }
                     break;
                 }
             }
@@ -46,7 +50,10 @@ class $modify(DDLLevelCell, LevelCell) {
             for (auto const& lvl : DDLIntegration::dcl) {
                 if (lvl.id == levelID) {
                     rankStrings.push_back(fmt::format("#{} DCL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
-                    if (lvl.position < bestRank) bestRank = lvl.position;
+                    if (lvl.position < bestRank) {
+                        bestRank = lvl.position;
+                        bestSource = "DCL";
+                    }
                     break;
                 }
             }
@@ -56,7 +63,7 @@ class $modify(DDLLevelCell, LevelCell) {
         }
 
         if (!rankStrings.empty()) {
-            this->addRank(rankStrings, bestRank);
+            this->addRank(rankStrings, bestRank, bestSource);
             
             CCNode* diffNode = m_mainLayer->getChildByID("difficulty-sprite");
             if (!diffNode) {
@@ -153,7 +160,7 @@ class $modify(DDLLevelCell, LevelCell) {
         CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, browser));
     }
 
-    void addRank(const std::vector<std::string>& ranks, int bestRank) {
+    void addRank(const std::vector<std::string>& ranks, int bestRank, const std::string& bestSource = "") {
         if (m_mainLayer->getChildByID("level-rank-label"_spr)) return;
 
         auto dailyLevel = m_level->m_dailyID.value() > 0;
@@ -177,13 +184,15 @@ class $modify(DDLLevelCell, LevelCell) {
             rankTextNode->setBlendFunc({ GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA });
         }
         
+        int legacyThreshold = (bestSource == "DCL") ? 100 : 150;
+        
         if (bestRank == 1) {
             rankTextNode->setColor({255, 200, 50});
         } else if (bestRank == 2) {
             rankTextNode->setColor({200, 200, 200});
         } else if (bestRank == 3) {
             rankTextNode->setColor({210, 140, 70});
-        } else if (bestRank > 150) {
+        } else if (bestRank > legacyThreshold) {
             rankTextNode->setColor({255, 75, 75});
         } else {
             if (isWhite) {

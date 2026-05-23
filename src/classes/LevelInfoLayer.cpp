@@ -11,12 +11,16 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
         if (!LevelInfoLayer::init(level, challenge)) return false;
 
         int bestRank = 99999;
+        std::string bestSource = "";
         auto levelID = level->m_levelID.value();
 
         if (DDLIntegration::ddlLoaded) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
-                    if (lvl.position < bestRank) bestRank = lvl.position;
+                    if (lvl.position < bestRank) {
+                        bestRank = lvl.position;
+                        bestSource = "DDL";
+                    }
                     break;
                 }
             }
@@ -25,7 +29,10 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
         if (DDLIntegration::dclLoaded) {
             for (auto const& lvl : DDLIntegration::dcl) {
                 if (lvl.id == levelID) {
-                    if (lvl.position < bestRank) bestRank = lvl.position;
+                    if (lvl.position < bestRank) {
+                        bestRank = lvl.position;
+                        bestSource = "DCL";
+                    }
                     break;
                 }
             }
@@ -126,13 +133,15 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
             
             facePlacement->setScale(0.5f);
 
+            int legacyThreshold = (bestSource == "DCL") ? 100 : 150;
+            
             if (bestRank == 1) {
                 facePlacement->setColor({255, 200, 50});
             } else if (bestRank == 2) {
                 facePlacement->setColor({200, 200, 200});
             } else if (bestRank == 3) {
                 facePlacement->setColor({210, 140, 70});
-            } else if (bestRank > 150) {
+            } else if (bestRank > legacyThreshold) {
                 facePlacement->setColor({255, 75, 75});
             } else {
                 facePlacement->setColor({255, 255, 255});
