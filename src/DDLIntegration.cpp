@@ -22,7 +22,7 @@ bool DDLIntegration::ddlLoaded = false;
 bool DDLIntegration::dclLoaded = false;
 
 double DDLIntegration::calculateScore(int rank) {
-    if (rank > 150) return 0.0;
+    if (rank > 150) return 1.0;
     const int listSize = 150;
     const double coefficient = -249.0 / std::pow(listSize - 1, 0.4);
     double res = (coefficient * std::pow(rank - 1, 0.4) + 250.0);

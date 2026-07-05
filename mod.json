@@ -6,7 +6,7 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v1.2.9",
+    "version": "v1.2.10",
     "id": "anticroom.ddl-integration",
     "name": "DDL Integration",
     "developer": "anticroom",
@@ -18,14 +18,14 @@
     },
     "settings": {
         "enable-rank": {
-            "name": "Enable Demon Ranking Text",
+            "name": "Enable Level Ranking Text",
             "description": "Whether or not to display the demon ranking text.",
             "type": "bool",
             "default": true
         },
         "white-rank": {
-            "name": "White Demon Ranking Text",
-            "description": "Whether or not to display the demon ranking text in white.",
+            "name": "White Level Ranking Text",
+            "description": "Whether or not to display the level ranking text in white.",
             "type": "bool",
             "enable-if": "enable-rank",
             "default": false
