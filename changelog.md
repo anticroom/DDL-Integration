@@ -1,5 +1,9 @@
 # Integrated DDL
 
+# 1.2.10
+
+Changed legacy list points to give 1 rather than 0 per legacy level.
+
 # v1.2.9
 
 Lowered the DCL legacy to 100 so it matches the current website which recently updated DCL legacy to 100.
