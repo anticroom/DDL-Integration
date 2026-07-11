@@ -196,10 +196,11 @@ class $modify(DDLLevelCell, LevelCell) {
             rankTextNode->setColor({255, 75, 75});
         } else {
             if (isWhite) {
+                rankTextNode->setColor({ 255, 255, 255 });
                 rankTextNode->setOpacity(255);
             } else {
                 rankTextNode->setColor({ 255, 255, 255 });
-                rankTextNode->setOpacity(255);
+                rankTextNode->setOpacity(175);
             }
         }
         

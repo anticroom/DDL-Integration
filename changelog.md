@@ -1,5 +1,9 @@
 # Integrated DDL
 
+# 1.3.0
+
+Improved the Integration page's visuals with a panning background along with fixing the colors used to match what's used on the website.
+
 # 1.2.10
 
 Changed legacy list points to give 1 rather than 0 per legacy level.
@@ -36,7 +40,7 @@ better use of nodeIDs and some cleanup with buggy code
 
 Fixed version missmatch
 
-## v1.2.1
+# v1.2.1
 
 Added proper cross platform support.
 
@@ -44,14 +48,14 @@ Added proper cross platform support.
 
 Added a integrated leaderboard <3
 
-## v1.1.0
+# v1.1.0
 
 Moved around everything and remade the visual elements in the packs to hopefully get indexed soon enough.
 
-## v1.0.1
+# v1.0.1
 
 Made some things more distant from the original theming and color scheme that was in the original demon list integration mod.
 
-## v1.0.0
+# v1.0.0
 
 First release with all core features

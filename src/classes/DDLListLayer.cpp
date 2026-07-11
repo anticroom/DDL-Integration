@@ -34,7 +34,7 @@ CCScene* DDLListLayer::scene() {
 }
 
 bool dclEnabled = false;
-const char* ddlInfo ="The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
+const char* ddlInfo = "The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
 const char* dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
 
 bool DDLListLayer::init() {
@@ -46,40 +46,101 @@ bool DDLListLayer::init() {
     m_pageCache = CCArray::create();
     m_pageCache->retain();
 
-    auto bg = CCSprite::create("GJ_gradientBG.png");
-    bg->setAnchorPoint(ccp(0.0f, 0.0f));
-    bg->setScaleX((winSize.width + 10.0f) / bg->getTextureRect().size.width);
-    bg->setScaleY((winSize.height + 10.0f) / bg->getTextureRect().size.height);
-    bg->setPosition(ccp(-5.0f, -5.0f));
-    bg->setColor({ 76, 33, 69 });
-    bg->setID("background");
+    // fetch settings
+    auto ddlColor = geode::Mod::get()->getSettingValue<cocos2d::ccColor3B>("ddl-bg-color");
+    auto dclColor = geode::Mod::get()->getSettingValue<cocos2d::ccColor3B>("dcl-bg-color");
+    auto bgColor = dclEnabled ? dclColor : ddlColor;
+    float scrollSpeed = static_cast<float>(geode::Mod::get()->getSettingValue<int>("scroll-speed"));
+
+    // lighten color to avoid dark fade
+    ccColor3B lightBgColor = {
+        static_cast<GLubyte>(std::min(255, bgColor.r + 60)),
+        static_cast<GLubyte>(std::min(255, bgColor.g + 60)),
+        static_cast<GLubyte>(std::min(255, bgColor.b + 60))
+    };
+
+    // scrolling background setup
+    auto bg = CCSprite::create("game_bg_01_001.png");
+    bg->setColor(lightBgColor);
+    
+    ccTexParams bgParams = {GL_LINEAR, GL_LINEAR, GL_REPEAT, GL_REPEAT};
+    bg->getTexture()->setTexParameters(&bgParams);
+    
+    float bgWidth = bg->getContentSize().width;
+    float bgHeight = bg->getContentSize().height;
+    
+    // zoom in more
+    float bgScale = (winSize.height / bgHeight) * 1.35f;
+    bg->setScale(bgScale);
+    
+    // add large width buffer to stop side clipping
+    bg->setTextureRect({0, 0, (winSize.width / bgScale) + (bgWidth * 2.0f), bgHeight});
+    bg->setAnchorPoint({0, 0});
+    
+    // center vertically
+    float yOffset = -(bgHeight * bgScale - winSize.height) / 2.0f;
+    bg->setPosition({0, yOffset});
+    bg->setID("scrolling-background");
+
+    auto bgMirroredTop = CCSprite::create("game_bg_01_001.png");
+    bgMirroredTop->setColor(lightBgColor);
+    bgMirroredTop->getTexture()->setTexParameters(&bgParams);
+    bgMirroredTop->setTextureRect({0, 0, (winSize.width / bgScale) + (bgWidth * 2.0f), bgHeight});
+    bgMirroredTop->setAnchorPoint({0, 0});
+    bgMirroredTop->setPosition({0, bgHeight});
+    bgMirroredTop->setFlipY(true);
+    bg->addChild(bgMirroredTop);
+
+    auto bgMirroredBottom = CCSprite::create("game_bg_01_001.png");
+    bgMirroredBottom->setColor(lightBgColor);
+    bgMirroredBottom->getTexture()->setTexParameters(&bgParams);
+    bgMirroredBottom->setTextureRect({0, 0, (winSize.width / bgScale) + (bgWidth * 2.0f), bgHeight});
+    bgMirroredBottom->setAnchorPoint({0, 0});
+    bgMirroredBottom->setPosition({0, -bgHeight});
+    bgMirroredBottom->setFlipY(true);
+    bg->addChild(bgMirroredBottom);
+
     addChild(bg);
 
-    auto bottomLeftCorner = CCSprite::createWithSpriteFrameName("gauntletCorner_001.png");
+    // move actions
+    float bgLoopDist = bgWidth * bgScale;
+    float bgTime = scrollSpeed * (bgLoopDist / winSize.width);
+    
+    bg->runAction(CCRepeatForever::create(CCSequence::create(
+        CCMoveBy::create(bgTime, ccp(-bgLoopDist, 0)),
+        CCMoveTo::create(0.0f, ccp(0, yOffset)),
+        nullptr
+    )));
+
+    // setup corners
+    auto bottomLeftCorner = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
     bottomLeftCorner->setPosition(ccp(-1.0f, -1.0f));
     bottomLeftCorner->setAnchorPoint(ccp(0.0f, 0.0f));
     bottomLeftCorner->setID("left-corner");
-    addChild(bottomLeftCorner);
+    addChild(bottomLeftCorner, 2);
 
-    auto bottomRightCorner = CCSprite::createWithSpriteFrameName("gauntletCorner_001.png");
+    auto bottomRightCorner = CCSprite::createWithSpriteFrameName("GJ_sideArt_001.png");
     bottomRightCorner->setPosition(ccp(winSize.width + 1.0f, -1.0f));
     bottomRightCorner->setAnchorPoint(ccp(1.0f, 0.0f));
     bottomRightCorner->setFlipX(true);
     bottomRightCorner->setID("right-corner");
-    addChild(bottomRightCorner);
+    addChild(bottomRightCorner, 2);
 
+    // setup labels
     m_countLabel = CCLabelBMFont::create("", "goldFont.fnt");
     m_countLabel->setAnchorPoint(ccp(1.0f, 1.0f));
     m_countLabel->setScale(0.6f);
     m_countLabel->setPosition(ccp(winSize.width - 7.0f, winSize.height - 3.0f));
     m_countLabel->setID("level-count-label");
-    addChild(m_countLabel);
+    addChild(m_countLabel, 2);
 
+    // setup list
     m_list = GJListLayer::create(nullptr, "DDL", { 0, 0, 0, 180 }, 356.0f, 220.0f, 0);
     m_list->setPosition(winSize / 2.0f - m_list->getContentSize() / 2.0f);
     m_list->setID("GJListLayer");
-    addChild(m_list, 2);
+    addChild(m_list, 3);
 
+    // setup search bar
     m_searchBarMenu = CCMenu::create();
     m_searchBarMenu->setContentSize({ 356.0f, 30.0f });
     m_searchBarMenu->setPosition(ccp(0.0f, 190.0f));
@@ -109,10 +170,11 @@ bool DDLListLayer::init() {
     m_searchBar->setID("search-bar");
     m_searchBarMenu->addChild(m_searchBar);
 
+    // setup main menu
     auto menu = CCMenu::create();
     menu->setPosition(ccp(0.0f, 0.0f));
     menu->setID("button-menu");
-    addChild(menu);
+    addChild(menu, 3);
 
     auto backButton = CCMenuItemSpriteExtra::create(
         CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png"), this, menu_selector(DDLListLayer::onBack)
@@ -137,24 +199,25 @@ bool DDLListLayer::init() {
     m_infoButton = InfoAlertButton::create("DDL", gd::string(ddlInfo), 1.0f);
     m_infoButton->setPosition(ccp(30.0f, 30.0f));
     m_infoButton->setID("info-button");
-    menu->addChild(m_infoButton, 2);
+    menu->addChild(m_infoButton);
 
     auto modeSpr = ButtonSprite::create("View Packs", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.0f, 0.5f);
     m_modeToggleBtn = CCMenuItemSpriteExtra::create(modeSpr, this, menu_selector(DDLListLayer::onModeToggle));
     m_modeToggleBtn->setPosition(ccp(45.0f, 100.0f));
     m_modeToggleBtn->setID("mode-toggle-button");
-    menu->addChild(m_modeToggleBtn, 2);
+    menu->addChild(m_modeToggleBtn);
 
-    m_failure = [this](int code) {
+    m_failure = [ this ](int code) {
         FLAlertLayer::create(fmt::format("Load Failed ({})", code).c_str(), "Failed to load API Data. Please try again later.", "OK")->show();
         m_loadingCircle->setVisible(false);
     };
 
+    // setup extra buttons
     auto refreshBtnSpr = CCSprite::createWithSpriteFrameName("GJ_updateBtn_001.png");
     auto refreshButton = CCMenuItemSpriteExtra::create(refreshBtnSpr, this, menu_selector(DDLListLayer::onRefresh));
     refreshButton->setPosition(ccp(winSize.width - refreshBtnSpr->getContentWidth() / 2.0f - 4.0f, refreshBtnSpr->getContentHeight() / 2.0f + 4.0f));
     refreshButton->setID("refresh-button");
-    menu->addChild(refreshButton, 2);
+    menu->addChild(refreshButton);
 
     auto starSprite = CCSprite::create("ddl-btn.png"_spr);
     starSprite->setScale(0.80f);
@@ -162,7 +225,7 @@ bool DDLListLayer::init() {
     m_starToggle->setPosition(ccp(30.0f, 60.0f));
     m_starToggle->setColor(dclEnabled ? ccColor3B { 125, 125, 125 } : ccColor3B { 255, 255, 255 });
     m_starToggle->setID("ddl-button");
-    menu->addChild(m_starToggle, 2);
+    menu->addChild(m_starToggle);
 
     auto moonSprite = CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png");
     moonSprite->setScale(1.2f);
@@ -170,8 +233,9 @@ bool DDLListLayer::init() {
     m_moonToggle->setPosition(ccp(60.0f, 60.0f));
     m_moonToggle->setColor(dclEnabled ? ccColor3B { 255, 255, 255 } : ccColor3B { 125, 125, 125 });
     m_moonToggle->setID("dcl-button");
-    menu->addChild(m_moonToggle, 2);
+    menu->addChild(m_moonToggle);
 
+    // setup pagination
     auto pageBtnSpr = CCSprite::create("GJ_button_02.png");
     pageBtnSpr->setScale(0.7f);
     m_pageLabel = CCLabelBMFont::create("1", "bigFont.fnt");
@@ -222,20 +286,21 @@ bool DDLListLayer::init() {
     m_loadingCircle->setID("loading-circle");
     m_loadingCircle->show();
 
+    // init fetch
     showLoading();
     updateHeaders();
     setKeypadEnabled(true);
     setKeyboardEnabled(true);
 
     if (dclEnabled) {
-        DDLIntegration::loadDCL(m_dclListener, [this] {
-            DDLIntegration::loadDCLPacks(m_dclListener, [this] {
+        DDLIntegration::loadDCL(m_dclListener, [ this ] {
+            DDLIntegration::loadDCLPacks(m_dclListener, [ this ] {
                 populateList("");
             }, m_failure);
         }, m_failure);
     } else {
-        DDLIntegration::loadDDL(m_ddlListener, [this] {
-            DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
+        DDLIntegration::loadDDL(m_ddlListener, [ this ] {
+            DDLIntegration::loadDDLPacks(m_ddlListener, [ this ] {
                 populateList("");
             }, m_failure);
         }, m_failure);
@@ -272,27 +337,28 @@ void DDLListLayer::onModeToggle(CCObject* sender) {
     }
     updateHeaders();
     
+    // mode fetch logic
     if (m_viewMode == 2) {
         showLoading();
         if (dclEnabled) {
             if (!DDLIntegration::dclLoaded || DDLIntegration::dclPacks.empty()) {
-                DDLIntegration::loadDCL(m_dclListener, [this] {
-                    DDLIntegration::loadDCLPacks(m_dclListener, [this] {
-                        DDLIntegration::loadLeaderboard(true, m_lboardListener, [this] { page(0); }, m_failure);
+                DDLIntegration::loadDCL(m_dclListener, [ this ] {
+                    DDLIntegration::loadDCLPacks(m_dclListener, [ this ] {
+                        DDLIntegration::loadLeaderboard(true, m_lboardListener, [ this ] { page(0); }, m_failure);
                     }, m_failure);
                 }, m_failure);
             } else if (DDLIntegration::dclLeaderboard.empty()) {
-                DDLIntegration::loadLeaderboard(true, m_lboardListener, [this] { page(0); }, m_failure);
+                DDLIntegration::loadLeaderboard(true, m_lboardListener, [ this ] { page(0); }, m_failure);
             } else page(0);
         } else {
             if (!DDLIntegration::ddlLoaded || DDLIntegration::ddlPacks.empty()) {
-                DDLIntegration::loadDDL(m_ddlListener, [this] {
-                    DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
-                        DDLIntegration::loadLeaderboard(false, m_lboardListener, [this] { page(0); }, m_failure);
+                DDLIntegration::loadDDL(m_ddlListener, [ this ] {
+                    DDLIntegration::loadDDLPacks(m_ddlListener, [ this ] {
+                        DDLIntegration::loadLeaderboard(false, m_lboardListener, [ this ] { page(0); }, m_failure);
                     }, m_failure);
                 }, m_failure);
             } else if (DDLIntegration::ddlLeaderboard.empty()) {
-                DDLIntegration::loadLeaderboard(false, m_lboardListener, [this] { page(0); }, m_failure);
+                DDLIntegration::loadLeaderboard(false, m_lboardListener, [ this ] { page(0); }, m_failure);
             } else page(0);
         }
     } else {
@@ -320,31 +386,31 @@ void DDLListLayer::onRefresh(CCObject* sender) {
     showLoading();
     if (m_viewMode == 2) {
         if (dclEnabled) {
-            DDLIntegration::loadDCL(m_dclListener, [this] {
-                DDLIntegration::loadDCLPacks(m_dclListener, [this] {
-                    DDLIntegration::loadLeaderboard(true, m_lboardListener, [this] { populateList(m_query); }, m_failure);
+            DDLIntegration::loadDCL(m_dclListener, [ this ] {
+                DDLIntegration::loadDCLPacks(m_dclListener, [ this ] {
+                    DDLIntegration::loadLeaderboard(true, m_lboardListener, [ this ] { populateList(m_query); }, m_failure);
                 }, m_failure);
             }, m_failure);
         } else {
-            DDLIntegration::loadDDL(m_ddlListener, [this] {
-                DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
-                    DDLIntegration::loadLeaderboard(false, m_lboardListener, [this] { populateList(m_query); }, m_failure);
+            DDLIntegration::loadDDL(m_ddlListener, [ this ] {
+                DDLIntegration::loadDDLPacks(m_ddlListener, [ this ] {
+                    DDLIntegration::loadLeaderboard(false, m_lboardListener, [ this ] { populateList(m_query); }, m_failure);
                 }, m_failure);
             }, m_failure);
         }
     } else if (m_viewMode == 1) {
         if (dclEnabled) {
-            DDLIntegration::loadDCL(m_dclListener, [this] {
-                DDLIntegration::loadDCLPacks(m_dclListener, [this] { populateList(m_query); }, m_failure);
+            DDLIntegration::loadDCL(m_dclListener, [ this ] {
+                DDLIntegration::loadDCLPacks(m_dclListener, [ this ] { populateList(m_query); }, m_failure);
             }, m_failure);
         } else {
-            DDLIntegration::loadDDL(m_ddlListener, [this] {
-                DDLIntegration::loadDDLPacks(m_ddlListener, [this] { populateList(m_query); }, m_failure);
+            DDLIntegration::loadDDL(m_ddlListener, [ this ] {
+                DDLIntegration::loadDDLPacks(m_ddlListener, [ this ] { populateList(m_query); }, m_failure);
             }, m_failure);
         }
     } else {
-        if (dclEnabled) DDLIntegration::loadDCL(m_dclListener, [this] { populateList(m_query); }, m_failure);
-        else DDLIntegration::loadDDL(m_ddlListener, [this] { populateList(m_query); }, m_failure);
+        if (dclEnabled) DDLIntegration::loadDCL(m_dclListener, [ this ] { populateList(m_query); }, m_failure);
+        else DDLIntegration::loadDDL(m_ddlListener, [ this ] { populateList(m_query); }, m_failure);
     }
 }
 
@@ -354,30 +420,45 @@ void DDLListLayer::onStar(CCObject* sender) {
     m_starToggle->setColor({ 255, 255, 255 });
     m_moonToggle->setColor({ 125, 125, 125 });
 
-    if (auto bg = getChildByID("background")) {
-        bg->runAction(cocos2d::CCTintTo::create(0.5f, 76, 33, 69));
+    // read our new split setting target
+    auto targetColor = geode::Mod::get()->getSettingValue<cocos2d::ccColor3B>("ddl-bg-color");
+    GLubyte tr = std::min(255, targetColor.r + 60);
+    GLubyte tg = std::min(255, targetColor.g + 60);
+    GLubyte tb = std::min(255, targetColor.b + 60);
+
+    if (auto bg = getChildByID("scrolling-background")) {
+        bg->runAction(cocos2d::CCTintTo::create(0.5f, tr, tg, tb));
+        if (bg->getChildrenCount() > 0) {
+            auto children = bg->getChildren();
+            for (int i = 0; i < children->count(); i++) {
+                if (auto child = typeinfo_cast<CCSprite*>(children->objectAtIndex(i))) {
+                    child->runAction(cocos2d::CCTintTo::create(0.5f, tr, tg, tb));
+                }
+            }
+        }
     }
 
     updateHeaders();
     showLoading();
     
+    // fetch star
     if (m_viewMode == 2) {
         if (!DDLIntegration::ddlLoaded || DDLIntegration::ddlPacks.empty()) {
-            DDLIntegration::loadDDL(m_ddlListener, [this] {
-                DDLIntegration::loadDDLPacks(m_ddlListener, [this] {
-                    DDLIntegration::loadLeaderboard(false, m_lboardListener, [this] { page(0); }, m_failure);
+            DDLIntegration::loadDDL(m_ddlListener, [ this ] {
+                DDLIntegration::loadDDLPacks(m_ddlListener, [ this ] {
+                    DDLIntegration::loadLeaderboard(false, m_lboardListener, [ this ] { page(0); }, m_failure);
                 }, m_failure);
             }, m_failure);
         } else if (DDLIntegration::ddlLeaderboard.empty()) {
-            DDLIntegration::loadLeaderboard(false, m_lboardListener, [this] { page(0); }, m_failure);
+            DDLIntegration::loadLeaderboard(false, m_lboardListener, [ this ] { page(0); }, m_failure);
         } else {
             page(0);
         }
     } else if (DDLIntegration::ddlLoaded && !DDLIntegration::ddlPacks.empty()) {
         page(0);
     } else {
-        DDLIntegration::loadDDL(m_ddlListener, [this] {
-            DDLIntegration::loadDDLPacks(m_ddlListener, [this] { page(0); }, m_failure);
+        DDLIntegration::loadDDL(m_ddlListener, [ this ] {
+            DDLIntegration::loadDDLPacks(m_ddlListener, [ this ] { page(0); }, m_failure);
         }, m_failure);
     }
 }
@@ -388,30 +469,45 @@ void DDLListLayer::onMoon(CCObject* sender) {
     m_starToggle->setColor({ 125, 125, 125 });
     m_moonToggle->setColor({ 255, 255, 255 });
 
-    if (auto bg = getChildByID("background")) {
-        bg->runAction(cocos2d::CCTintTo::create(0.5f, 60, 18, 76));
+    // read our new split setting target
+    auto targetColor = geode::Mod::get()->getSettingValue<cocos2d::ccColor3B>("dcl-bg-color");
+    GLubyte tr = std::min(255, targetColor.r + 60);
+    GLubyte tg = std::min(255, targetColor.g + 60);
+    GLubyte tb = std::min(255, targetColor.b + 60);
+
+    if (auto bg = getChildByID("scrolling-background")) {
+        bg->runAction(cocos2d::CCTintTo::create(0.5f, tr, tg, tb));
+        if (bg->getChildrenCount() > 0) {
+            auto children = bg->getChildren();
+            for (int i = 0; i < children->count(); i++) {
+                if (auto child = typeinfo_cast<CCSprite*>(children->objectAtIndex(i))) {
+                    child->runAction(cocos2d::CCTintTo::create(0.5f, tr, tg, tb));
+                }
+            }
+        }
     }
 
     updateHeaders();
     showLoading();
     
+    // fetch moon
     if (m_viewMode == 2) {
         if (!DDLIntegration::dclLoaded || DDLIntegration::dclPacks.empty()) {
-            DDLIntegration::loadDCL(m_dclListener, [this] {
-                DDLIntegration::loadDCLPacks(m_dclListener, [this] {
-                    DDLIntegration::loadLeaderboard(true, m_lboardListener, [this] { page(0); }, m_failure);
+            DDLIntegration::loadDCL(m_dclListener, [ this ] {
+                DDLIntegration::loadDCLPacks(m_dclListener, [ this ] {
+                    DDLIntegration::loadLeaderboard(true, m_lboardListener, [ this ] { page(0); }, m_failure);
                 }, m_failure);
             }, m_failure);
         } else if (DDLIntegration::dclLeaderboard.empty()) {
-            DDLIntegration::loadLeaderboard(true, m_lboardListener, [this] { page(0); }, m_failure);
+            DDLIntegration::loadLeaderboard(true, m_lboardListener, [ this ] { page(0); }, m_failure);
         } else {
             page(0);
         }
     } else if (DDLIntegration::dclLoaded && !DDLIntegration::dclPacks.empty()) {
         page(0);
     } else {
-        DDLIntegration::loadDCL(m_dclListener, [this] {
-            DDLIntegration::loadDCLPacks(m_dclListener, [this] { page(0); }, m_failure);
+        DDLIntegration::loadDCL(m_dclListener, [ this ] {
+            DDLIntegration::loadDCLPacks(m_dclListener, [ this ] { page(0); }, m_failure);
         }, m_failure);
     }
 }
@@ -501,6 +597,7 @@ void DDLListLayer::populateList(const std::string& query) {
         m_list->m_listView = nullptr;
     }
 
+    // mode populate lboard
     if (m_viewMode == 2) {
         m_fullLeaderboardResults.clear();
         const auto& currentLboard = dclEnabled ? DDLIntegration::dclLeaderboard : DDLIntegration::ddlLeaderboard;
@@ -518,9 +615,11 @@ void DDLListLayer::populateList(const std::string& query) {
             searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
         }
 
+        auto size = m_fullLeaderboardResults.size();
+        m_page = size == 0 ? 0 : std::clamp<int>(m_page, 0, static_cast<int>((size - 1) / 10));
+
         auto cells = CCArray::create();
         auto start = m_page * 10;
-        auto size = m_fullLeaderboardResults.size();
         auto end = std::min<int>(size, (m_page + 1) * 10);
         
         for (auto it = m_fullLeaderboardResults.begin() + start; it < m_fullLeaderboardResults.begin() + end; ++it) {
@@ -549,6 +648,7 @@ void DDLListLayer::populateList(const std::string& query) {
             m_randomButton->setVisible(true);
         }
     }
+    // mode populate packs
     else if (m_viewMode == 1) {
         m_fullPackResults.clear();
         const auto& currentPacks = dclEnabled ? DDLIntegration::dclPacks : DDLIntegration::ddlPacks;
@@ -566,9 +666,11 @@ void DDLListLayer::populateList(const std::string& query) {
             searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
         }
 
+        auto size = m_fullPackResults.size();
+        m_page = size == 0 ? 0 : std::clamp<int>(m_page, 0, static_cast<int>((size - 1) / 10));
+
         auto packs = CCArray::create();
         auto start = m_page * 10;
-        auto size = m_fullPackResults.size();
         auto end = std::min<int>(size, (m_page + 1) * 10);
         std::string packTypeString = dclEnabled ? "DCL Pack" : "DDL Pack";
         
@@ -597,7 +699,9 @@ void DDLListLayer::populateList(const std::string& query) {
             m_pageButton->setVisible(true);
             m_randomButton->setVisible(true);
         }
-    } else {
+    } 
+    // mode populate list
+    else {
         m_fullSearchResults.clear();
         
         if (query.empty()) {
@@ -615,6 +719,8 @@ void DDLListLayer::populateList(const std::string& query) {
             searchSprite->setDisplayFrame(CCSpriteFrame::createWithTexture(texture, { { 0.0f, 0.0f }, texture->getContentSize() }));
         }
 
+        m_page = m_fullSearchResults.empty() ? 0 : std::clamp<int>(m_page, 0, static_cast<int>((m_fullSearchResults.size() - 1) / 10));
+
         if (m_fullSearchResults.empty()) {
             loadLevelsFinished(CCArray::create(), "", 0);
             m_countLabel->setString("");
@@ -629,7 +735,7 @@ void DDLListLayer::populateList(const std::string& query) {
             size_t endIdx = std::min<size_t>(m_fullSearchResults.size(), startIdx + 10);
             for (size_t i = startIdx; i < endIdx; ++i) {
                 if (i != startIdx) idQuery += ",";
-                idQuery += m_fullSearchResults[i];
+                idQuery += m_fullSearchResults[ i ];
             }
             
             auto searchObject = GJSearchObject::create(SearchType::Type19, idQuery);
@@ -687,7 +793,7 @@ void DDLListLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     for (size_t i = start; i < end; i++) {
         int expectedID = 0;
         
-        if (auto parsed = geode::utils::numFromString<int>(m_fullSearchResults[i])) {
+        if (auto parsed = geode::utils::numFromString<int>(m_fullSearchResults[ i ])) {
             expectedID = parsed.unwrap();
         }
 

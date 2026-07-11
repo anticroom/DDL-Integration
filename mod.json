@@ -6,14 +6,14 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v1.2.10",
+    "version": "v1.3.0",
     "id": "anticroom.ddl-integration",
     "name": "DDL Integration",
     "developer": "anticroom",
     "description": "Simple DDL and DCL integration.",
     "resources": {
-        "sprites": [
-            "resources/*.png"
+        "sprites": [ 
+            "resources/*.png" 
         ]
     },
     "settings": {
@@ -29,6 +29,26 @@
             "type": "bool",
             "enable-if": "enable-rank",
             "default": false
+        },
+        "ddl-bg-color": {
+            "name": "DDL Background Color",
+            "description": "Sets the color of the background for the DDL.",
+            "type": "color",
+            "default": "#ff6ee7"
+        },
+        "dcl-bg-color": {
+            "name": "DCL Background Color",
+            "description": "Sets the color of the background for the DCL",
+            "type": "color",
+            "default": "#ba3fff"
+        },
+        "scroll-speed": {
+            "name": "Scroll Speed",
+            "description": "How fast the background pans.",
+            "type": "int",
+            "default": 15,
+            "min": 5,
+            "max": 30
         }
     },
     "dependencies": {
@@ -39,11 +59,11 @@
         "source": "https://github.com/anticroom/DDL-Integration",
         "homepage": "https://denouementdl.vercel.app"
     },
-    "tags": [
+    "tags": [ 
         "content",
         "enhancement",
         "interface",
         "online",
-        "utility"
+        "utility" 
     ]
 }

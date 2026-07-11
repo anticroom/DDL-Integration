@@ -3,10 +3,15 @@
 #include <Geode/binding/LevelInfoLayer.hpp>
 #include <Geode/binding/GJDifficultySprite.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
+#include <jasmine/hook.hpp>
 
 using namespace geode::prelude;
 
 class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
+    static void onModify(ModifyBase<ModifyDerive<DDLLevelInfoLayer, LevelInfoLayer>>& self) {
+        jasmine::hook::modify(self.m_hooks, "LevelInfoLayer::init", "enable-rank");
+    }
+
     bool init(GJGameLevel* level, bool challenge) {
         if (!LevelInfoLayer::init(level, challenge)) return false;
 
