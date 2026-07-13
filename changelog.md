@@ -1,10 +1,14 @@
 # Integrated DDL
 
-# 1.3.0
+# v1.4.0
+
+Added leaderboard profiles for viewing users stats along with a point milestone bar.
+
+# v1.3.0
 
 Improved the Integration page's visuals with a panning background along with fixing the colors used to match what's used on the website.
 
-# 1.2.10
+# v1.2.10
 
 Changed legacy list points to give 1 rather than 0 per legacy level.
 

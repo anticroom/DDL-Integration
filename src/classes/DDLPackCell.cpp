@@ -46,9 +46,16 @@ bool DDLPackCell::init(std::string_view name, double points, std::span<const int
     bg->setContentSize({ 356.0f, 100.0f });
     bg->setPosition(ccp(178.0f, 50.0f));
     bg->setColor(packColor);
-    bg->setOpacity(115);
+    bg->setOpacity(125);
     bg->setID("background");
     addChild(bg, -1);
+
+    auto innerGlow = cocos2d::extension::CCScale9Sprite::create("square02b_001.png");
+    innerGlow->setContentSize({ 330.0f, 82.0f });
+    innerGlow->setPosition(ccp(178.0f, 50.0f));
+    innerGlow->setColor({ 0, 0, 0 });
+    innerGlow->setOpacity(45);
+    addChild(innerGlow, -1);
 
     auto nameLabel = CCLabelBMFont::create(name.data(), "bigFont.fnt");
     nameLabel->setAnchorPoint(ccp(0.0f, 0.5f));

@@ -28,14 +28,20 @@ struct IDDemonPack {
         : name(name), color(color), levels(levels), points(points) {}
 };
 
+struct DDLLevelRecord {
+    std::string name;
+    int position;
+    double points;
+};
+
 struct DDLLeaderboardEntry {
     std::string user;
     double points = 0.0;
     std::vector<std::string> completedPacks;
     double packPoints = 0.0;
-    std::vector<std::string> verifiedLevels;
+    std::vector<DDLLevelRecord> verifiedLevels;
     double verifiedPoints = 0.0;
-    std::vector<std::string> completedLevels;
+    std::vector<DDLLevelRecord> completedLevels;
     double completedPoints = 0.0;
     int rank = 0;
 };

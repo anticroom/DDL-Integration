@@ -1,12 +1,11 @@
 #include "DDLLeaderboardCell.hpp"
 #include <Geode/binding/ButtonSprite.hpp>
-#include <Geode/binding/FLAlertLayer.hpp>
 
 using namespace geode::prelude;
 
-DDLLeaderboardCell* DDLLeaderboardCell::create(const DDLLeaderboardEntry& entry) {
+DDLLeaderboardCell* DDLLeaderboardCell::create(const DDLLeaderboardEntry& entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index) {
     auto ret = new DDLLeaderboardCell();
-    if (ret->init(entry)) {
+    if (ret->init(entry, onProfileOpen, index)) {
         ret->autorelease();
         return ret;
     }
@@ -14,17 +13,18 @@ DDLLeaderboardCell* DDLLeaderboardCell::create(const DDLLeaderboardEntry& entry)
     return nullptr;
 }
 
-bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry) {
+bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index) {
     if (!CCLayer::init()) return false;
     
     m_entry = entry;
+    m_onProfileOpen = onProfileOpen;
     setContentSize({356.0f, 35.0f});
 
     auto bg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png");
     bg->setContentSize({356.0f, 35.0f});
     bg->setPosition(ccp(178.0f, 17.5f));
     bg->setColor({0, 0, 0});
-    bg->setOpacity(entry.rank % 2 == 0 ? 95 : 55); 
+    bg->setOpacity(index % 2 == 0 ? 95 : 55); 
     addChild(bg);
 
     auto rankLabel = CCLabelBMFont::create(fmt::format("#{}", entry.rank).c_str(), "bigFont.fnt");
@@ -58,7 +58,8 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry) {
     auto infoSpr = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
     infoSpr->setScale(0.65f);
     
-    auto btn = CCMenuItemSpriteExtra::create(infoSpr, this, menu_selector(DDLLeaderboardCell::onInfo));
+    auto btn = CCMenuItemSpriteExtra::create(infoSpr, this, menu_selector(DDLLeaderboardCell::onProfile));
+    
     auto menu = CCMenu::create();
     menu->addChild(btn);
     menu->setPosition(ccp(342.0f, 17.5f));
@@ -67,21 +68,8 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry) {
     return true;
 }
 
-void DDLLeaderboardCell::onInfo(CCObject*) {
-    std::string infoStr = "";
-    
-    infoStr += fmt::format("<cy>Verifications:</c> {}  (<cg>{:.2f} pts</c>)\n\n", 
-                           m_entry.verifiedLevels.size(), m_entry.verifiedPoints);
-                           
-    infoStr += fmt::format("<cy>Completions:</c> {}  (<cg>{:.2f} pts</c>)\n\n", 
-                           m_entry.completedLevels.size(), m_entry.completedPoints);
-                           
-    infoStr += fmt::format("<cy>Packs Beaten:</c> {}  (<cg>{:.2f} pts</c>)", 
-                           m_entry.completedPacks.size(), m_entry.packPoints);
-
-    FLAlertLayer::create(
-        fmt::format("{}'s Stats", m_entry.user).c_str(), 
-        infoStr, 
-        "OK"
-    )->show();
+void DDLLeaderboardCell::onProfile(CCObject*) {
+    if (m_onProfileOpen) {
+        m_onProfileOpen(m_entry.user);
+    }
 }
