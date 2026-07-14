@@ -20,11 +20,8 @@ bool DDLProfileLevelCell::init(const DDLLevelRecord& record, bool isVerification
     setID("DDLProfileLevelCell");
     setContentSize({ 380.0f, 30.0f });
 
-    auto bg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png");
-    bg->setContentSize({ 380.0f, 30.0f });
-    bg->setPosition(ccp(190.0f, 15.0f));
-    bg->setColor({ 0, 0, 0 });
-    bg->setOpacity(index % 2 == 0 ? 80 : 30); 
+    auto bg = CCLayerColor::create(ccc4(0, 0, 0, index % 2 == 0 ? 80 : 30), 380.0f, 30.0f);
+    bg->setPosition(ccp(0.0f, 0.0f));
     bg->setID("background");
     addChild(bg);
 
@@ -36,24 +33,24 @@ bool DDLProfileLevelCell::init(const DDLLevelRecord& record, bool isVerification
     nameLabel->setID("name-label");
     addChild(nameLabel);
 
-    auto placementLabel = CCLabelBMFont::create(fmt::format("#{}", record.position).c_str(), "goldFont.fnt");
+    auto placementLabel = CCLabelBMFont::create(fmt::format("#{}", record.position).c_str(), "goldFont-uhd.fnt");
     placementLabel->setPosition(ccp(230.0f, 15.0f));
-    placementLabel->setScale(0.55f);
+    placementLabel->setScale(0.55f * (cocos2d::CC_CONTENT_SCALE_FACTOR() / 4.0f));
     placementLabel->setID("placement-label");
 
     std::string fontTexFile = "";
     int legacyThreshold = isDCL ? 100 : 150;
 
     if (record.position == 1) {
-        fontTexFile = "DDL_RubyFont.png";
+        fontTexFile = "DDL_RubyFont-uhd.png";
     } else if (record.position <= 3) {
-        fontTexFile = "DDL_DiamondFont.png";
+        fontTexFile = "DDL_DiamondFont-uhd.png";
     } else if (record.position <= 5) {
-        fontTexFile = "DDL_GoldFont.png";
+        fontTexFile = "DDL_GoldFont-uhd.png";
     } else if (record.position <= 10) {
-        fontTexFile = "DDL_SilverFont.png";
+        fontTexFile = "DDL_SilverFont-uhd.png";
     } else if (record.position <= 25) {
-        fontTexFile = "DDL_BronzeFont.png";
+        fontTexFile = "DDL_BronzeFont-uhd.png";
     } else if (record.position > legacyThreshold) {
         placementLabel->setColor({ 255, 75, 75 });
     }

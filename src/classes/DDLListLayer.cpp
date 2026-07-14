@@ -826,10 +826,10 @@ void DDLListLayer::showProfilePage(const std::string& username) {
     m_profileStatsNode->addChild(usernameLabel);
 
     if (rank > 0) {
-        auto rankLabel = CCLabelBMFont::create(fmt::format("RANK\n{}", rank).c_str(), "goldFont.fnt");
+        auto rankLabel = CCLabelBMFont::create(fmt::format("RANK\n{}", rank).c_str(), "goldFont-uhd.fnt");
         rankLabel->setAnchorPoint(ccp(1.0f, 0.5f));
         rankLabel->setPosition(ccp(center.x + 180.0f, center.y + 110.0f));
-        rankLabel->setScale(0.5f);
+        rankLabel->setScale(0.5f * (cocos2d::CC_CONTENT_SCALE_FACTOR() / 4.0f));
         rankLabel->setAlignment(kCCTextAlignmentCenter);
         rankLabel->setID("rank-label");
 
@@ -838,19 +838,19 @@ void DDLListLayer::showProfilePage(const std::string& username) {
 
         if (rank == 1) {
             trophyFile = "DDL_rankicon_ruby.png";
-            fontTexFile = "DDL_RubyFont.png";
+            fontTexFile = "DDL_RubyFont-uhd.png";
         } else if (rank <= 3) {
             trophyFile = "DDL_rankicon_diamond.png";
-            fontTexFile = "DDL_DiamondFont.png";
+            fontTexFile = "DDL_DiamondFont-uhd.png";
         } else if (rank <= 5) {
             trophyFile = "DDL_rankicon_gold.png";
-            fontTexFile = "DDL_GoldFont.png";
+            fontTexFile = "DDL_GoldFont-uhd.png";
         } else if (rank <= 10) {
             trophyFile = "DDL_rankicon_silver.png";
-            fontTexFile = "DDL_SilverFont.png";
+            fontTexFile = "DDL_SilverFont-uhd.png";
         } else if (rank <= 25) {
             trophyFile = "DDL_rankicon_bronze.png";
-            fontTexFile = "DDL_BronzeFont.png";
+            fontTexFile = "DDL_BronzeFont-uhd.png";
         }
 
         if (!fontTexFile.empty()) {

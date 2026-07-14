@@ -1,5 +1,6 @@
 #include "DDLLeaderboardCell.hpp"
 #include <Geode/binding/ButtonSprite.hpp>
+#include <Geode/loader/Mod.hpp>
 
 using namespace geode::prelude;
 
@@ -20,11 +21,8 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableF
     m_onProfileOpen = onProfileOpen;
     setContentSize({356.0f, 35.0f});
 
-    auto bg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png");
-    bg->setContentSize({356.0f, 35.0f});
-    bg->setPosition(ccp(178.0f, 17.5f));
-    bg->setColor({0, 0, 0});
-    bg->setOpacity(index % 2 == 0 ? 95 : 55); 
+    auto bg = CCLayerColor::create(ccc4(0, 0, 0, index % 2 == 0 ? 95 : 55), 356.0f, 35.0f);
+    bg->setPosition(ccp(0.0f, 0.0f));
     addChild(bg);
 
     auto rankLabel = CCLabelBMFont::create(fmt::format("#{}", entry.rank).c_str(), "bigFont.fnt");
@@ -55,10 +53,12 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableF
     ptsLabel->setScale(0.45f);
     addChild(ptsLabel);
 
-    auto infoSpr = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
-    infoSpr->setScale(0.65f);
-    
-    auto btn = CCMenuItemSpriteExtra::create(infoSpr, this, menu_selector(DDLLeaderboardCell::onProfile));
+    auto profileSpr = CCSprite::create("DDL_ProfileIcon_001.png"_spr);
+    constexpr float infoIconPointSize = 23.0f * 0.65f;
+    float profileScale = infoIconPointSize / std::max(profileSpr->getContentSize().width, profileSpr->getContentSize().height);
+    profileSpr->setScale(profileScale);
+
+    auto btn = CCMenuItemSpriteExtra::create(profileSpr, this, menu_selector(DDLLeaderboardCell::onProfile));
     
     auto menu = CCMenu::create();
     menu->addChild(btn);

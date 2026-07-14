@@ -1,5 +1,9 @@
 # Integrated DDL
 
+# v1.4.1
+
+Fixed small visual bugs relating to low - medium texture qualities breaking text along with adding a better button sprite to use as the profile leaderboard button
+
 # v1.4.0
 
 Added leaderboard profiles for viewing users stats along with a point milestone bar.
