@@ -1,12 +1,12 @@
 {
-    "geode": "5.5.3",
+    "geode": "5.8.2",
     "gd": {
         "android": "2.2081",
         "win": "2.2081",
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v1.4.1",
+    "version": "v1.4.2",
     "id": "anticroom.ddl-integration",
     "name": "DDL Integration",
     "developer": "anticroom",

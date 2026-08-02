@@ -63,7 +63,7 @@ bool DDLProfileLevelCell::init(const DDLLevelRecord& record, bool isVerification
 
     addChild(placementLabel);
 
-    auto pointsLabel = CCLabelBMFont::create(fmt::format("{:.2f} pts", record.points).c_str(), "goldFont.fnt");
+    auto pointsLabel = CCLabelBMFont::create(fmt::format("{:.3f} pts", record.points).c_str(), "goldFont.fnt");
     pointsLabel->setAnchorPoint(ccp(1.0f, 0.5f));
     pointsLabel->setPosition(ccp(370.0f, 15.0f));
     pointsLabel->setScale(0.45f);

@@ -753,6 +753,7 @@ void DDLListLayer::showProfilePage(const std::string& username) {
         
         userVerifLevels = it->verifiedLevels;
         userComplLevels = it->completedLevels;
+        userComplLevels.insert(userComplLevels.end(), it->progressedLevels.begin(), it->progressedLevels.end());
     }
     m_currentProfilePoints = points;
 
@@ -883,7 +884,7 @@ void DDLListLayer::showProfilePage(const std::string& username) {
         prevMilestone = m;
     }
 
-    auto pointsText = CCLabelBMFont::create(fmt::format("PTS: {:.2f} / {}", points, nextMilestone).c_str(), "goldFont.fnt");
+    auto pointsText = CCLabelBMFont::create(fmt::format("PTS: {:.3f} / {}", points, nextMilestone).c_str(), "goldFont.fnt");
     pointsText->setAnchorPoint(ccp(0.0f, 0.5f));
     pointsText->setPosition(ccp(center.x - 90.0f, center.y + 95.0f));
     pointsText->setScale(0.45f);

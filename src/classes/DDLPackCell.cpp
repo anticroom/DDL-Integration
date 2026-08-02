@@ -70,7 +70,7 @@ bool DDLPackCell::init(std::string_view name, double points, std::span<const int
         return gsm->hasCompletedOnlineLevel(level);
     });
 
-    auto pointsLabel = CCLabelBMFont::create(fmt::format("{:.2f} Points", points).c_str(), "goldFont.fnt");
+    auto pointsLabel = CCLabelBMFont::create(fmt::format("{:.3f} Points", points).c_str(), "goldFont.fnt");
     pointsLabel->setAnchorPoint(ccp(0.0f, 0.5f));
     pointsLabel->setPosition(ccp(15.0f, 52.0f));
     pointsLabel->setScale(0.6f);

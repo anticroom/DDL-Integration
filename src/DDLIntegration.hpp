@@ -43,6 +43,8 @@ struct DDLLeaderboardEntry {
     double verifiedPoints = 0.0;
     std::vector<DDLLevelRecord> completedLevels;
     double completedPoints = 0.0;
+    std::vector<DDLLevelRecord> progressedLevels;
+    double progressedPoints = 0.0;
     int rank = 0;
 };
 
@@ -64,5 +66,7 @@ namespace DDLIntegration {
     void loadDCLPacks(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
     void loadLeaderboard(bool isDcl, geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
     
-    double calculateScore(int rank);
+    int getLegacyCutoff(bool isDcl);
+    double calculateScore(int rank, bool isDcl = false);
+    double calculateScore(int rank, int percent, int minPercent, bool isDcl);
 }

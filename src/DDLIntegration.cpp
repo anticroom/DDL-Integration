@@ -21,12 +21,34 @@ std::vector<DDLLeaderboardEntry> DDLIntegration::dclLeaderboard;
 bool DDLIntegration::ddlLoaded = false;
 bool DDLIntegration::dclLoaded = false;
 
-double DDLIntegration::calculateScore(int rank) {
-    if (rank > 150) return 1.0;
-    const int listSize = 150;
+static double roundScore(double num) {
+    return std::round(num * 1000.0) / 1000.0;
+}
+int DDLIntegration::getLegacyCutoff(bool isDcl) {
+    return isDcl ? 100 : 150;
+}
+double DDLIntegration::calculateScore(int rank, bool isDcl) {
+    const int legacyCutoff = getLegacyCutoff(isDcl);
+    if (rank > legacyCutoff) return roundScore(1.0);
+    const int listSize = legacyCutoff;
     const double coefficient = -249.0 / std::pow(listSize - 1, 0.4);
     double res = (coefficient * std::pow(rank - 1, 0.4) + 250.0);
-    return std::max(0.0, res);
+    return roundScore(std::max(0.0, res));}
+double DDLIntegration::calculateScore(int rank, int percent, int minPercent, bool isDcl) {
+    const int legacyCutoff = getLegacyCutoff(isDcl);
+    const double qualifyingFloor = minPercent - 1.0;
+    const double progressRatio = (percent - qualifyingFloor) / (100.0 - qualifyingFloor);
+    double res;
+    if (rank > legacyCutoff) {
+        res = 1.0 * progressRatio;
+    } else {
+        const int listSize = legacyCutoff;
+        const double coefficient = -249.0 / std::pow(listSize - 1, 0.4);
+        res = (coefficient * std::pow(rank - 1, 0.4) + 250.0) * progressRatio;
+    }
+    res = std::max(0.0, res);
+    if (percent != 100) return roundScore(res - res / 3.0);
+    return std::max(0.0, roundScore(res));
 }
 
 void DDLIntegration::loadDDL(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
@@ -147,11 +169,11 @@ void DDLIntegration::loadDDLPacks(TaskHolder<web::WebResponse>& listener, Functi
                     auto it = std::find_if(ddl.begin(), ddl.end(), [ & ](const IDListDemon& d) { return d.uid == uuid; });
                     if (it != ddl.end()) {
                         gdIds.push_back(it->id);
-                        totalPackPoints += calculateScore(it->position);
+                        totalPackPoints += calculateScore(it->position, false);
                     }
                 }
 
-                ddlPacks.emplace_back(name.unwrap(), color, gdIds, totalPackPoints * 0.33);
+                ddlPacks.emplace_back(name.unwrap(), color, gdIds, roundScore(totalPackPoints * 0.33));
             }
             success();
         }
@@ -196,11 +218,11 @@ void DDLIntegration::loadDCLPacks(TaskHolder<web::WebResponse>& listener, Functi
                     auto it = std::find_if(dcl.begin(), dcl.end(), [ & ](const IDListDemon& d) { return d.uid == uuid; });
                     if (it != dcl.end()) {
                         gdIds.push_back(it->id);
-                        totalPackPoints += calculateScore(it->position);
+                        totalPackPoints += calculateScore(it->position, true);
                     }
                 }
 
-                dclPacks.emplace_back(name.unwrap(), color, gdIds, totalPackPoints * 0.33);
+                dclPacks.emplace_back(name.unwrap(), color, gdIds, roundScore(totalPackPoints * 0.33));
             }
             success();
         }
@@ -218,6 +240,9 @@ namespace {
         double verifiedPoints = 0.0;
         std::vector<DDLLevelRecord> completedLevels;
         double completedPoints = 0.0;
+        std::vector<DDLLevelRecord> progressedLevels;
+        double progressedPoints = 0.0;
+        std::set<int> progressedGdIds;
     };
 
     std::vector<DDLLeaderboardEntry> computeLeaderboardData(const matjson::Value& res, bool isDcl) {
@@ -233,7 +258,8 @@ namespace {
             auto lvlNameRes = lvl.get<std::string>("name");
             std::string lvlName = lvlNameRes.isOk() ? lvlNameRes.unwrap() : "Unknown";
 
-            double baseScore = DDLIntegration::calculateScore(rank);
+            int minPercent = lvl.get<int>("percentToQualify").unwrapOr(100);
+            double baseScore = DDLIntegration::calculateScore(rank, 100, minPercent, isDcl);
 
             auto verifierRes = lvl.get<std::string>("verifier");
             std::string verifier = verifierRes.isOk() ? verifierRes.unwrap() : "";
@@ -262,7 +288,8 @@ namespace {
                     auto key = string::toLower(user);
                     if (userMap.find(key) == userMap.end()) userMap[ key ] = {user};
 
-                    if (pctRes.unwrap() == 100) {
+                    int percent = pctRes.unwrap();
+                    if (percent == 100) {
                         if (key != string::toLower(verifier)) {
                             if (userMap[ key ].completedGdIds.find(gdId) == userMap[ key ].completedGdIds.end()) {
                                 userMap[ key ].points += baseScore;
@@ -270,6 +297,15 @@ namespace {
                                 userMap[ key ].completedLevels.push_back({lvlName, rank, baseScore});
                                 userMap[ key ].completedPoints += baseScore;
                             }
+                        }
+                    } else if (percent >= minPercent) {
+                        if (userMap[key].completedGdIds.find(gdId) == userMap[key].completedGdIds.end() &&
+                            userMap[key].progressedGdIds.find(gdId) == userMap[ key ].progressedGdIds.end()) {
+                            double progressScore = DDLIntegration::calculateScore(rank, percent, minPercent, isDcl);
+                            userMap[key].points += progressScore;
+                            userMap[key].progressedGdIds.insert(gdId);
+                            userMap[key].progressedLevels.push_back({std::to_string(percent) + "% " + lvlName, rank, progressScore});
+                            userMap[key].progressedPoints += progressScore;
                         }
                     }
                 }
@@ -298,12 +334,13 @@ namespace {
 
         std::vector<DDLLeaderboardEntry> result;
         for (auto& [ key, user ] : userMap) {
-            if (!user.completedLevels.empty() || !user.verifiedLevels.empty() || !user.packs.empty()) {
+            if (!user.completedLevels.empty() || !user.verifiedLevels.empty() || !user.packs.empty() || !user.progressedLevels.empty()) {
                 result.push_back({
-                    user.name, user.points, 
-                    user.packs, user.packPoints, 
-                    user.verifiedLevels, user.verifiedPoints, 
-                    user.completedLevels, user.completedPoints, 
+                    user.name, user.points,
+                    user.packs, user.packPoints,
+                    user.verifiedLevels, user.verifiedPoints,
+                    user.completedLevels, user.completedPoints,
+                    user.progressedLevels, user.progressedPoints,
                     0
                 });
             }

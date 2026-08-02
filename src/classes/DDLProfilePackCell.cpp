@@ -34,7 +34,7 @@ bool DDLProfilePackCell::init(const std::string& packName, double packPoints, in
     nameLabel->setID("name-label");
     addChild(nameLabel);
 
-    auto pointsLabel = CCLabelBMFont::create(fmt::format("{:.2f} PTS", packPoints).c_str(), "goldFont.fnt");
+    auto pointsLabel = CCLabelBMFont::create(fmt::format("{:.3f} PTS", packPoints).c_str(), "goldFont.fnt");
     pointsLabel->setAnchorPoint(ccp(1.0f, 0.5f));
     pointsLabel->setPosition(ccp(370.0f, 15.0f));
     pointsLabel->setScale(0.45f);

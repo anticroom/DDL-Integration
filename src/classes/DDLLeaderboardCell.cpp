@@ -47,7 +47,7 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableF
     nameLabel->limitLabelWidth(140.0f, 0.55f, 0.0f);
     addChild(nameLabel);
 
-    auto ptsLabel = CCLabelBMFont::create(fmt::format("{:.2f} Pts", entry.points).c_str(), "goldFont.fnt");
+    auto ptsLabel = CCLabelBMFont::create(fmt::format("{:.3f} Pts", entry.points).c_str(), "goldFont.fnt");
     ptsLabel->setAnchorPoint(ccp(1.0f, 0.5f));
     ptsLabel->setPosition(ccp(325.0f, 17.5f));
     ptsLabel->setScale(0.45f);

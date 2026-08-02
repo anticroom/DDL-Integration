@@ -33,7 +33,7 @@ class $modify(DDLLevelCell, LevelCell) {
         if (DDLIntegration::ddlLoaded) {
             for (auto const& lvl : DDLIntegration::ddl) {
                 if (lvl.id == levelID) {
-                    rankStrings.push_back(fmt::format("#{} DDL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
+                    rankStrings.push_back(fmt::format("#{} DDL ({:.3f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position, false)));
                     if (lvl.position < bestRank) {
                         bestRank = lvl.position;
                         bestSource = "DDL";
@@ -49,7 +49,7 @@ class $modify(DDLLevelCell, LevelCell) {
         if (DDLIntegration::dclLoaded) {
             for (auto const& lvl : DDLIntegration::dcl) {
                 if (lvl.id == levelID) {
-                    rankStrings.push_back(fmt::format("#{} DCL ({:.1f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position)));
+                    rankStrings.push_back(fmt::format("#{} DCL ({:<.3f} pts)", lvl.position, DDLIntegration::calculateScore(lvl.position, true)));
                     if (lvl.position < bestRank) {
                         bestRank = lvl.position;
                         bestSource = "DCL";
