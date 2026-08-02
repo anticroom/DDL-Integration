@@ -55,7 +55,7 @@ void DDLIntegration::loadDDL(TaskHolder<web::WebResponse>& listener, Function<vo
     auto cachePath = geode::Mod::get()->getSaveDir() / "ddl_cache.json";
 
     listener.spawn(
-        web::WebRequest().get("https://denouementdl.vercel.app/api/levels?type=DDL"),
+        web::WebRequest().get("https://www.denouementdemonlist.com/api/levels?type=DDL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
                 geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
@@ -95,7 +95,7 @@ void DDLIntegration::loadDCL(TaskHolder<web::WebResponse>& listener, Function<vo
     auto cachePath = geode::Mod::get()->getSaveDir() / "dcl_cache.json";
 
     listener.spawn(
-        web::WebRequest().get("https://denouementdl.vercel.app/api/levels?type=DCL"),
+        web::WebRequest().get("https://www.denouementdemonlist.com/api/levels?type=DCL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
                 geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
@@ -135,7 +135,7 @@ void DDLIntegration::loadDDLPacks(TaskHolder<web::WebResponse>& listener, Functi
     auto cachePath = geode::Mod::get()->getSaveDir() / "ddl_packs_cache.json";
 
     listener.spawn(
-        web::WebRequest().get("https://denouementdl.vercel.app/api/packs?type=DDL"),
+        web::WebRequest().get("https://www.denouementdemonlist.com/api/packs?type=DDL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
                 geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
@@ -184,7 +184,7 @@ void DDLIntegration::loadDCLPacks(TaskHolder<web::WebResponse>& listener, Functi
     auto cachePath = geode::Mod::get()->getSaveDir() / "dcl_packs_cache.json";
 
     listener.spawn(
-        web::WebRequest().get("https://denouementdl.vercel.app/api/packs?type=DCL"),
+        web::WebRequest().get("https://www.denouementdemonlist.com/api/packs?type=DCL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
                 geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
@@ -365,7 +365,7 @@ namespace {
 
 void DDLIntegration::loadLeaderboard(bool isDcl, TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
     std::string typeStr = isDcl ? "DCL" : "DDL";
-    std::string url = "https://denouementdl.vercel.app/api/levels?type=" + typeStr + "&full=true";
+    std::string url = "https://www.denouementdemonlist.com/api/levels?type=" + typeStr + "&full=true";
     
     listener.spawn(
         web::WebRequest().get(url),

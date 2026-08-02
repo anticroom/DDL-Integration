@@ -1,5 +1,5 @@
 # Denouement Demon List Integration
-Simple [Denouement Demon List](https://denouementdl.vercel.app/#/DDL) and [Denouement Challenge List](https://denouementdl.vercel.app/#/DCL) integration.
+Simple [Denouement Demon List](https://www.denouementdemonlist.com/#/DDL) and [Denouement Challenge List](https://www.denouementdemonlist.com/#/DCL) integration.
 If you want to check our out community then come join our [Discord](https://discord.gg/denouement)! 
 
 ## Features

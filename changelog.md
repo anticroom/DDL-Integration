@@ -1,4 +1,7 @@
 # Integrated DDL
+# v1.4.2
+
+Fixed the DCL legacy cutoff not being 100 but instead the DCL was the same as the DDL legacy cutoff of 150 which wasn't the same on the list's website along with switching to using the new lists url.
 
 # v1.4.1
 
