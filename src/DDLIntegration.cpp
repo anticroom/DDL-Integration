@@ -110,39 +110,15 @@ static const char *rankAtlasFor(int position)
 
 CCLabelBMFont *DDLIntegration::createRankLabel(const std::string &text, int position, float scale)
 {
-    static const struct
-    {
-        const char *fnt;
-        const char *suffix;
-        float glyph;
-    } variants[] = {
-        {"goldFont-uhd.fnt", "-uhd", 4.0f},
-        {"goldFont-hd.fnt", "-hd", 2.0f},
-        {"goldFont.fnt", "", 1.0f},
-    };
-
-    CCLabelBMFont *label = nullptr;
-    const char *suffix = "";
-    float glyph = 1.0f;
-
-    for (auto const &variant : variants)
-    {
-        label = CCLabelBMFont::create(text.c_str(), variant.fnt);
-        if (label)
-        {
-            suffix = variant.suffix;
-            glyph = variant.glyph;
-            break;
-        }
-    }
+    auto label = CCLabelBMFont::create(text.c_str(), "goldFont.fnt");
     if (!label)
         return nullptr;
 
-    label->setScale(scale * CC_CONTENT_SCALE_FACTOR() / glyph);
+    label->setScale(scale);
 
     if (auto atlas = rankAtlasFor(position))
     {
-        auto name = geode::Mod::get()->expandSpriteName(fmt::format("{}{}.png", atlas, suffix));
+        auto name = geode::Mod::get()->expandSpriteName(fmt::format("{}.png", atlas));
         if (auto tex = CCTextureCache::get()->addImage(name.c_str(), false))
             label->setTexture(tex);
     }
