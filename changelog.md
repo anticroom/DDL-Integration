@@ -1,4 +1,8 @@
 # Integrated DDL
+# v1.6.1
+
+Turns out the android crash wasn't fixed, It now should no longer crash this time.
+
 # v1.6.0
 
 Added the Denouement Variant List! Also fixed a crash on android when opening someones leaderboard profile, along with various other bugfixes.
