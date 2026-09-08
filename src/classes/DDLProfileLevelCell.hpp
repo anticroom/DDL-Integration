@@ -2,10 +2,11 @@
 #include <cocos2d.h>
 #include "../DDLIntegration.hpp"
 
-class DDLProfileLevelCell : public cocos2d::CCLayer {
+class DDLProfileLevelCell : public cocos2d::CCLayer
+{
 public:
-    static DDLProfileLevelCell* create(const DDLLevelRecord& record, bool isVerification, bool isDCL, int index);
+    static DDLProfileLevelCell *create(const DDLLevelRecord &record, bool isVerification, DDLIntegration::ListType type, int index);
 
 protected:
-    bool init(const DDLLevelRecord& record, bool isVerification, bool isDCL, int index);
+    bool init(const DDLLevelRecord &record, bool isVerification, DDLIntegration::ListType type, int index);
 };

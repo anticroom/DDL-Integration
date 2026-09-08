@@ -3,19 +3,23 @@
 
 using namespace geode::prelude;
 
-class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
-    bool init(int searchType) {
-        if (!LevelSearchLayer::init(searchType)) return false;
+class $modify(DDLLevelSearchLayer, LevelSearchLayer)
+{
+    bool init(int searchType)
+    {
+        if (!LevelSearchLayer::init(searchType))
+            return false;
 
         auto ddlButtonSprite = CCSprite::create("ddl-btn.png"_spr);
-        
-        ddlButtonSprite->setScale(1.0f); 
-        
+
+        ddlButtonSprite->setScale(1.0f);
+
         auto ddlButton = CCMenuItemSpriteExtra::create(ddlButtonSprite, this, menu_selector(DDLLevelSearchLayer::onDDLLevels));
-        
+
         ddlButton->setID("ddl-search-button"_spr);
-        
-        if (auto menu = this->getChildByID("bottom-left-menu")) {
+
+        if (auto menu = this->getChildByID("bottom-left-menu"))
+        {
             menu->addChild(ddlButton);
             menu->updateLayout();
         }
@@ -23,7 +27,8 @@ class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
         return true;
     }
 
-    void onDDLLevels(CCObject* sender) {
+    void onDDLLevels(CCObject *sender)
+    {
         CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, DDLListLayer::scene()));
     }
 };

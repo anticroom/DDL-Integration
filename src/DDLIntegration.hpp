@@ -4,22 +4,25 @@
 #include <vector>
 #include <string>
 
-struct IDListDemon {
+struct IDListDemon
+{
     int id = 0;
     int position = 0;
     std::string name;
     std::string author;
     std::string uid;
 
-    IDListDemon(int id, int position, std::string name, std::string author, std::string uid) 
+    IDListDemon(int id, int position, std::string name, std::string author, std::string uid)
         : id(id), position(position), name(name), author(author), uid(uid) {}
 
-    bool operator==(const IDListDemon& other) const {
+    bool operator==(const IDListDemon &other) const
+    {
         return id == other.id && position == other.position;
     }
 };
 
-struct IDDemonPack {
+struct IDDemonPack
+{
     std::string name;
     std::string color;
     std::vector<int> levels;
@@ -29,13 +32,15 @@ struct IDDemonPack {
         : name(name), color(color), levels(levels), points(points) {}
 };
 
-struct DDLLevelRecord {
+struct DDLLevelRecord
+{
     std::string name;
     int position;
     double points;
 };
 
-struct DDLLeaderboardEntry {
+struct DDLLeaderboardEntry
+{
     std::string user;
     double points = 0.0;
     std::vector<std::string> completedPacks;
@@ -49,26 +54,27 @@ struct DDLLeaderboardEntry {
     int rank = 0;
 };
 
-namespace DDLIntegration {
-    extern std::vector<IDListDemon> ddl;
-    extern std::vector<IDDemonPack> ddlPacks;
-    extern std::vector<DDLLeaderboardEntry> ddlLeaderboard;
-    
-    extern std::vector<IDListDemon> dcl;
-    extern std::vector<IDDemonPack> dclPacks;
-    extern std::vector<DDLLeaderboardEntry> dclLeaderboard;
-    
-    extern bool ddlLoaded;
-    extern bool dclLoaded;
+namespace DDLIntegration
+{
+    enum class ListType
+    {
+        DDL,
+        DCL
+    };
+    inline constexpr int listTypeCount = 2;
 
-    void loadDDL(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
-    void loadDDLPacks(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
-    void loadDCL(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
-    void loadDCLPacks(geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
-    void loadLeaderboard(bool isDcl, geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
-    
-    int getLegacyCutoff(bool isDcl);
-    cocos2d::CCLabelBMFont* createRankLabel(const std::string& text, int position, float scale);
-    double calculateScore(int rank, bool isDcl = false);
-    double calculateScore(int rank, int percent, int minPercent, bool isDcl);
+    std::vector<IDListDemon> &levels(ListType);
+    std::vector<IDDemonPack> &packs(ListType);
+    std::vector<DDLLeaderboardEntry> &leaderboard(ListType);
+    bool isLoaded(ListType);
+    const char *listName(ListType);
+
+    void loadLevels(ListType, geode::async::TaskHolder<geode::utils::web::WebResponse> &, geode::Function<void()>, geode::CopyableFunction<void(int)>);
+    void loadPacks(ListType, geode::async::TaskHolder<geode::utils::web::WebResponse> &, geode::Function<void()>, geode::CopyableFunction<void(int)>);
+    void loadLeaderboard(ListType, geode::async::TaskHolder<geode::utils::web::WebResponse> &, geode::Function<void()>, geode::CopyableFunction<void(int)>);
+
+    int getLegacyCutoff(ListType);
+    cocos2d::CCLabelBMFont *createRankLabel(const std::string &text, int position, float scale);
+    double calculateScore(int rank, ListType);
+    double calculateScore(int rank, int percent, int minPercent, ListType);
 }

@@ -2,10 +2,11 @@
 #include <cocos2d.h>
 #include <string>
 
-class DDLProfilePackCell : public cocos2d::CCLayer {
+class DDLProfilePackCell : public cocos2d::CCLayer
+{
 public:
-    static DDLProfilePackCell* create(const std::string& packName, double packPoints, int index);
+    static DDLProfilePackCell *create(const std::string &packName, double packPoints, int index);
 
 protected:
-    bool init(const std::string& packName, double packPoints, int index);
+    bool init(const std::string &packName, double packPoints, int index);
 };

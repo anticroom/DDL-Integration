@@ -5,14 +5,15 @@
 #include <string>
 #include <string_view>
 
-class DDLPackCell : public cocos2d::CCLayer {
+class DDLPackCell : public cocos2d::CCLayer
+{
 public:
-    static DDLPackCell* create(std::string_view, double, std::span<const int>, std::string_view, std::string_view);
+    static DDLPackCell *create(std::string_view, double, std::span<const int>, std::string_view, std::string_view);
 
 protected:
     std::vector<int> m_levels;
     std::string m_packName;
 
     bool init(std::string_view, double, std::span<const int>, std::string_view, std::string_view);
-    void onClick(cocos2d::CCObject*);
+    void onClick(cocos2d::CCObject *);
 };

@@ -3,9 +3,11 @@
 
 using namespace geode::prelude;
 
-DDLProfilePackCell* DDLProfilePackCell::create(const std::string& packName, double packPoints, int index) {
+DDLProfilePackCell *DDLProfilePackCell::create(const std::string &packName, double packPoints, int index)
+{
     auto ret = new DDLProfilePackCell();
-    if (ret->init(packName, packPoints, index)) {
+    if (ret->init(packName, packPoints, index))
+    {
         ret->autorelease();
         return ret;
     }
@@ -13,17 +15,19 @@ DDLProfilePackCell* DDLProfilePackCell::create(const std::string& packName, doub
     return nullptr;
 }
 
-bool DDLProfilePackCell::init(const std::string& packName, double packPoints, int index) {
-    if (!CCLayer::init()) return false;
-    
+bool DDLProfilePackCell::init(const std::string &packName, double packPoints, int index)
+{
+    if (!CCLayer::init())
+        return false;
+
     setID("DDLProfilePackCell");
-    setContentSize({ 380.0f, 30.0f });
+    setContentSize({380.0f, 30.0f});
 
     auto bg = cocos2d::extension::CCScale9Sprite::create("square02b_001.png");
-    bg->setContentSize({ 380.0f, 30.0f });
+    bg->setContentSize({380.0f, 30.0f});
     bg->setPosition(ccp(190.0f, 15.0f));
-    bg->setColor({ 100, 50, 0 });
-    bg->setOpacity(index % 2 == 0 ? 120 : 60); 
+    bg->setColor({100, 50, 0});
+    bg->setOpacity(index % 2 == 0 ? 120 : 60);
     bg->setID("background");
     addChild(bg);
 

@@ -4,9 +4,11 @@
 
 using namespace geode::prelude;
 
-DDLProfileLevelCell* DDLProfileLevelCell::create(const DDLLevelRecord& record, bool isVerification, bool isDCL, int index) {
+DDLProfileLevelCell *DDLProfileLevelCell::create(const DDLLevelRecord &record, bool isVerification, DDLIntegration::ListType type, int index)
+{
     auto ret = new DDLProfileLevelCell();
-    if (ret->init(record, isVerification, isDCL, index)) {
+    if (ret->init(record, isVerification, type, index))
+    {
         ret->autorelease();
         return ret;
     }
@@ -14,11 +16,13 @@ DDLProfileLevelCell* DDLProfileLevelCell::create(const DDLLevelRecord& record, b
     return nullptr;
 }
 
-bool DDLProfileLevelCell::init(const DDLLevelRecord& record, bool isVerification, bool isDCL, int index) {
-    if (!CCLayer::init()) return false;
-    
+bool DDLProfileLevelCell::init(const DDLLevelRecord &record, bool isVerification, DDLIntegration::ListType type, int index)
+{
+    if (!CCLayer::init())
+        return false;
+
     setID("DDLProfileLevelCell");
-    setContentSize({ 380.0f, 30.0f });
+    setContentSize({380.0f, 30.0f});
 
     auto bg = CCLayerColor::create(ccc4(0, 0, 0, index % 2 == 0 ? 80 : 30), 380.0f, 30.0f);
     bg->setPosition(ccp(0.0f, 0.0f));
@@ -29,16 +33,19 @@ bool DDLProfileLevelCell::init(const DDLLevelRecord& record, bool isVerification
     nameLabel->setAnchorPoint(ccp(0.0f, 0.5f));
     nameLabel->setPosition(ccp(10.0f, 15.0f));
     nameLabel->limitLabelWidth(180.0f, 0.55f, 0.0f);
-    if (isVerification) nameLabel->setColor({ 100, 255, 100 });
+    if (isVerification)
+        nameLabel->setColor({100, 255, 100});
     nameLabel->setID("name-label");
     addChild(nameLabel);
 
     auto placementLabel = DDLIntegration::createRankLabel(fmt::format("#{}", record.position), record.position, 0.55f);
-    if (!placementLabel) return false;
+    if (!placementLabel)
+        return false;
     placementLabel->setPosition(ccp(230.0f, 15.0f));
     placementLabel->setID("placement-label");
-    if (record.position > DDLIntegration::getLegacyCutoff(isDCL)) {
-        placementLabel->setColor({ 255, 75, 75 });
+    if (record.position > DDLIntegration::getLegacyCutoff(type))
+    {
+        placementLabel->setColor({255, 75, 75});
     }
 
     addChild(placementLabel);

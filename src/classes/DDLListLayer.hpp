@@ -17,97 +17,100 @@ class LoadingCircle;
 class InfoAlertButton;
 class SetIDPopup;
 
-class DDLListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate {
+class DDLListLayer : public cocos2d::CCLayer, SetIDPopupDelegate, LevelManagerDelegate
+{
 public:
-    static DDLListLayer* create();
-    static cocos2d::CCScene* scene();
+    static DDLListLayer *create();
+    static cocos2d::CCScene *scene();
 
     void page(int);
     void keyDown(cocos2d::enumKeyCodes, double) override;
     void keyBackClicked() override;
     void onExit() override;
     void registerWithTouchDispatcher() override;
-    bool ccTouchBegan(cocos2d::CCTouch*, cocos2d::CCEvent*) override;
+    bool ccTouchBegan(cocos2d::CCTouch *, cocos2d::CCEvent *) override;
 
     ~DDLListLayer() override;
+
 protected:
-    geode::async::TaskHolder<geode::utils::web::WebResponse> m_ddlListener;
-    geode::async::TaskHolder<geode::utils::web::WebResponse> m_dclListener;
+    geode::async::TaskHolder<geode::utils::web::WebResponse> m_listListeners[DDLIntegration::listTypeCount];
     geode::async::TaskHolder<geode::utils::web::WebResponse> m_lboardListener;
     geode::async::TaskHolder<geode::utils::web::WebResponse> m_userIconListener;
-    
-    GJListLayer* m_list;
-    cocos2d::CCLabelBMFont* m_listLabel;
-    LoadingCircle* m_loadingCircle;
-    cocos2d::CCMenu* m_searchBarMenu;
-    geode::TextInput* m_searchBar;
-    
-    cocos2d::CCLayer* m_profileOverlay;
-    cocos2d::CCNode* m_profileStatsNode;
-    
-    geode::ListView* m_verifsListView = nullptr;
-    geode::ListView* m_complListView = nullptr;
-    geode::ListView* m_packsListView = nullptr;
-    
-    cocos2d::CCMenu* m_profileToggleMenu;
-    CCMenuItemSpriteExtra* m_toggleVerifsBtn;
-    CCMenuItemSpriteExtra* m_toggleComplBtn;
-    CCMenuItemSpriteExtra* m_togglePacksBtn;
 
-    cocos2d::CCLabelBMFont* m_countLabel;
-    cocos2d::CCLabelBMFont* m_pageLabel;
-    InfoAlertButton* m_infoButton;
-    cocos2d::CCMenu* m_mainMenu;
-    
-    CCMenuItemSpriteExtra* m_leftButton;
-    CCMenuItemSpriteExtra* m_rightButton;
-    CCMenuItemSpriteExtra* m_pageButton;
-    CCMenuItemSpriteExtra* m_randomButton;
-    CCMenuItemSpriteExtra* m_firstButton;
-    CCMenuItemSpriteExtra* m_lastButton;
-    CCMenuItemSpriteExtra* m_starToggle;
-    CCMenuItemSpriteExtra* m_moonToggle;
-    CCMenuItemSpriteExtra* m_searchButton;
+    GJListLayer *m_list;
+    cocos2d::CCLabelBMFont *m_listLabel;
+    LoadingCircle *m_loadingCircle;
+    cocos2d::CCMenu *m_searchBarMenu;
+    geode::TextInput *m_searchBar;
 
-    cocos2d::CCArray* m_pageCache = nullptr;
+    cocos2d::CCLayer *m_profileOverlay;
+    cocos2d::CCNode *m_profileStatsNode;
+
+    geode::ListView *m_verifsListView = nullptr;
+    geode::ListView *m_complListView = nullptr;
+    geode::ListView *m_packsListView = nullptr;
+
+    cocos2d::CCMenu *m_profileToggleMenu;
+    CCMenuItemSpriteExtra *m_toggleVerifsBtn;
+    CCMenuItemSpriteExtra *m_toggleComplBtn;
+    CCMenuItemSpriteExtra *m_togglePacksBtn;
+
+    cocos2d::CCLabelBMFont *m_countLabel;
+    cocos2d::CCLabelBMFont *m_pageLabel;
+    InfoAlertButton *m_infoButton;
+    cocos2d::CCMenu *m_mainMenu;
+
+    CCMenuItemSpriteExtra *m_leftButton;
+    CCMenuItemSpriteExtra *m_rightButton;
+    CCMenuItemSpriteExtra *m_pageButton;
+    CCMenuItemSpriteExtra *m_randomButton;
+    CCMenuItemSpriteExtra *m_firstButton;
+    CCMenuItemSpriteExtra *m_lastButton;
+    CCMenuItemSpriteExtra *m_starToggle;
+    CCMenuItemSpriteExtra *m_moonToggle;
+    CCMenuItemSpriteExtra *m_searchButton;
+
+    cocos2d::CCArray *m_pageCache = nullptr;
     std::set<int> m_attemptedFetches;
     int m_page = 0;
     std::string m_query;
-    int m_profileTab = 1; 
-    
+    int m_profileTab = 1;
+
     int m_viewMode = 0;
     std::vector<std::string> m_fullSearchResults;
     std::vector<IDDemonPack> m_fullPackResults;
     std::vector<DDLLeaderboardEntry> m_fullLeaderboardResults;
     double m_currentProfilePoints = 0.0;
-    
+
     geode::CopyableFunction<void(int)> m_failure;
 
     bool init() override;
     void updateHeaders();
-    void onModeToggle(cocos2d::CCObject*);
-    void onSearch(cocos2d::CCObject*);
-    void onProfileClose(cocos2d::CCObject*);
-    void onBack(cocos2d::CCObject*);
-    void onPrevPage(cocos2d::CCObject*);
-    void onNextPage(cocos2d::CCObject*);
-    void onRefresh(cocos2d::CCObject*);
-    void onStar(cocos2d::CCObject*);
-    void onMoon(cocos2d::CCObject*);
-    void onPage(cocos2d::CCObject*);
-    void onRandom(cocos2d::CCObject*);
-    void onFirst(cocos2d::CCObject*);
-    void onLast(cocos2d::CCObject*);
-    void onToggleProfileTab(cocos2d::CCObject*);
+    void onModeToggle(cocos2d::CCObject *);
+    void onSearch(cocos2d::CCObject *);
+    void onProfileClose(cocos2d::CCObject *);
+    void onBack(cocos2d::CCObject *);
+    void onPrevPage(cocos2d::CCObject *);
+    void onNextPage(cocos2d::CCObject *);
+    void onRefresh(cocos2d::CCObject *);
+    void onSwitchList(cocos2d::CCObject *);
+    void switchList(DDLIntegration::ListType);
+    void updateListToggles();
+    void loadCurrent(bool force, geode::CopyableFunction<void()>);
+    void onPage(cocos2d::CCObject *);
+    void onRandom(cocos2d::CCObject *);
+    void onFirst(cocos2d::CCObject *);
+    void onLast(cocos2d::CCObject *);
+    void onToggleProfileTab(cocos2d::CCObject *);
     void showLoading();
-    void populateList(const std::string& query);
-    void openProfilePage(const std::string& username);
-    void showProfilePage(const std::string& username);
+    void populateList(const std::string &query);
+    void openProfilePage(const std::string &username);
+    void showProfilePage(const std::string &username);
     void closeProfilePage();
     void setUnderlyingVisible(bool visible);
-    void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override;
-    void loadLevelsFailed(const char* key, int) override;
-    void setupPageInfo(gd::string, const char*) override;
-    void setIDPopupClosed(SetIDPopup*, int) override;
-    void onMilestoneInfo(cocos2d::CCObject*);
+    void loadLevelsFinished(cocos2d::CCArray *levels, const char *key, int) override;
+    void loadLevelsFailed(const char *key, int) override;
+    void setupPageInfo(gd::string, const char *) override;
+    void setIDPopupClosed(SetIDPopup *, int) override;
+    void onMilestoneInfo(cocos2d::CCObject *);
 };

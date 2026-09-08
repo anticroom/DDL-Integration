@@ -9,268 +9,251 @@
 #include <algorithm>
 
 using namespace geode::prelude;
+using ListType = DDLIntegration::ListType;
 
-std::vector<IDListDemon> DDLIntegration::ddl;
-std::vector<IDDemonPack> DDLIntegration::ddlPacks;
-std::vector<DDLLeaderboardEntry> DDLIntegration::ddlLeaderboard;
+static std::vector<IDListDemon> s_levels[DDLIntegration::listTypeCount];
+static std::vector<IDDemonPack> s_packs[DDLIntegration::listTypeCount];
+static std::vector<DDLLeaderboardEntry> s_leaderboards[DDLIntegration::listTypeCount];
+static bool s_loaded[DDLIntegration::listTypeCount] = {false, false};
 
-std::vector<IDListDemon> DDLIntegration::dcl;
-std::vector<IDDemonPack> DDLIntegration::dclPacks;
-std::vector<DDLLeaderboardEntry> DDLIntegration::dclLeaderboard;
+std::vector<IDListDemon> &DDLIntegration::levels(ListType type)
+{
+    return s_levels[static_cast<int>(type)];
+}
+std::vector<IDDemonPack> &DDLIntegration::packs(ListType type)
+{
+    return s_packs[static_cast<int>(type)];
+}
+std::vector<DDLLeaderboardEntry> &DDLIntegration::leaderboard(ListType type)
+{
+    return s_leaderboards[static_cast<int>(type)];
+}
+bool DDLIntegration::isLoaded(ListType type)
+{
+    return s_loaded[static_cast<int>(type)];
+}
+const char *DDLIntegration::listName(ListType type)
+{
+    return type == ListType::DCL ? "DCL" : "DDL";
+}
 
-bool DDLIntegration::ddlLoaded = false;
-bool DDLIntegration::dclLoaded = false;
+static std::string cachePathFor(ListType type, const char *suffix)
+{
+    auto name = std::string(DDLIntegration::listName(type));
+    for (auto &c : name)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return fmt::format("{}{}.json", name, suffix);
+}
 
-static double roundScore(double num) {
+static std::string fetchWithCache(const web::WebResponse &res, const std::filesystem::path &cachePath, bool &ok)
+{
+    ok = true;
+    if (res.ok())
+    {
+        auto body = res.string().unwrapOr("[]");
+        (void)geode::utils::file::writeString(cachePath, body);
+        return body;
+    }
+    if (std::filesystem::exists(cachePath))
+    {
+        return geode::utils::file::readString(cachePath).unwrapOr("[]");
+    }
+    ok = false;
+    return "";
+}
+
+static double roundScore(double num)
+{
     return std::round(num * 1000.0) / 1000.0;
 }
-int DDLIntegration::getLegacyCutoff(bool isDcl) {
-    return isDcl ? 100 : 150;
+int DDLIntegration::getLegacyCutoff(ListType type)
+{
+    return type == ListType::DCL ? 100 : 150;
 }
 
-static const char* rankAtlasFor(int position) {
-    if (position == 1) return "DDL_RubyFont";
-    if (position <= 3) return "DDL_DiamondFont";
-    if (position <= 5) return "DDL_GoldFont";
-    if (position <= 10) return "DDL_SilverFont";
-    if (position <= 25) return "DDL_BronzeFont";
+static const char *rankAtlasFor(int position)
+{
+    if (position == 1)
+        return "DDL_RubyFont";
+    if (position <= 3)
+        return "DDL_DiamondFont";
+    if (position <= 5)
+        return "DDL_GoldFont";
+    if (position <= 10)
+        return "DDL_SilverFont";
+    if (position <= 25)
+        return "DDL_BronzeFont";
     return nullptr;
 }
 
-CCLabelBMFont* DDLIntegration::createRankLabel(const std::string& text, int position, float scale) {
-    static const struct { const char* fnt; const char* suffix; float glyph; } variants[] = {
-        { "goldFont-uhd.fnt", "-uhd", 4.0f },
-        { "goldFont-hd.fnt", "-hd", 2.0f },
-        { "goldFont.fnt", "", 1.0f },
+CCLabelBMFont *DDLIntegration::createRankLabel(const std::string &text, int position, float scale)
+{
+    static const struct
+    {
+        const char *fnt;
+        const char *suffix;
+        float glyph;
+    } variants[] = {
+        {"goldFont-uhd.fnt", "-uhd", 4.0f},
+        {"goldFont-hd.fnt", "-hd", 2.0f},
+        {"goldFont.fnt", "", 1.0f},
     };
 
-    CCLabelBMFont* label = nullptr;
-    const char* suffix = "";
+    CCLabelBMFont *label = nullptr;
+    const char *suffix = "";
     float glyph = 1.0f;
 
-    for (auto const& variant : variants) {
+    for (auto const &variant : variants)
+    {
         label = CCLabelBMFont::create(text.c_str(), variant.fnt);
-        if (label) {
+        if (label)
+        {
             suffix = variant.suffix;
             glyph = variant.glyph;
             break;
         }
     }
-    if (!label) return nullptr;
+    if (!label)
+        return nullptr;
 
     label->setScale(scale * CC_CONTENT_SCALE_FACTOR() / glyph);
 
-    if (auto atlas = rankAtlasFor(position)) {
+    if (auto atlas = rankAtlasFor(position))
+    {
         auto name = geode::Mod::get()->expandSpriteName(fmt::format("{}{}.png", atlas, suffix));
-        if (auto tex = CCTextureCache::get()->addImage(name.c_str(), false)) label->setTexture(tex);
+        if (auto tex = CCTextureCache::get()->addImage(name.c_str(), false))
+            label->setTexture(tex);
     }
 
     return label;
 }
-double DDLIntegration::calculateScore(int rank, bool isDcl) {
-    const int legacyCutoff = getLegacyCutoff(isDcl);
-    if (rank > legacyCutoff) return roundScore(1.0);
+
+double DDLIntegration::calculateScore(int rank, ListType type)
+{
+    const int legacyCutoff = getLegacyCutoff(type);
+    if (rank > legacyCutoff)
+        return roundScore(1.0);
     const int listSize = legacyCutoff;
     const double coefficient = -249.0 / std::pow(listSize - 1, 0.4);
     double res = (coefficient * std::pow(rank - 1, 0.4) + 250.0);
-    return roundScore(std::max(0.0, res));}
-double DDLIntegration::calculateScore(int rank, int percent, int minPercent, bool isDcl) {
-    const int legacyCutoff = getLegacyCutoff(isDcl);
+    return roundScore(std::max(0.0, res));
+}
+
+double DDLIntegration::calculateScore(int rank, int percent, int minPercent, ListType type)
+{
+    const int legacyCutoff = getLegacyCutoff(type);
     const double qualifyingFloor = minPercent - 1.0;
     const double progressRatio = (percent - qualifyingFloor) / (100.0 - qualifyingFloor);
     double res;
-    if (rank > legacyCutoff) {
+    if (rank > legacyCutoff)
+    {
         res = 1.0 * progressRatio;
-    } else {
+    }
+    else
+    {
         const int listSize = legacyCutoff;
         const double coefficient = -249.0 / std::pow(listSize - 1, 0.4);
         res = (coefficient * std::pow(rank - 1, 0.4) + 250.0) * progressRatio;
     }
     res = std::max(0.0, res);
-    if (percent != 100) return roundScore(res - res / 3.0);
+    if (percent != 100)
+        return roundScore(res - res / 3.0);
     return std::max(0.0, roundScore(res));
 }
 
-void DDLIntegration::loadDDL(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
-    auto cachePath = geode::Mod::get()->getSaveDir() / "ddl_cache.json";
+void DDLIntegration::loadLevels(ListType type, TaskHolder<web::WebResponse> &listener, Function<void()> success, CopyableFunction<void(int)> failure)
+{
+    auto cachePath = geode::Mod::get()->getSaveDir() / cachePathFor(type, "_cache");
 
     listener.spawn(
-        web::WebRequest().get("https://www.denouementdemonlist.com/api/levels?type=DDL"),
-        [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
-            if (res.ok()) {
-                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
-            }
-
-            std::string jsonStr;
-            if (res.ok()) {
-                jsonStr = res.string().unwrapOr("[]");
-            } else if (std::filesystem::exists(cachePath)) {
-                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
-            } else {
+        web::WebRequest().get(fmt::format("https://www.denouementdemonlist.com/api/levels?type={}", listName(type))),
+        [type, cachePath, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable
+        {
+            bool ok = false;
+            auto jsonStr = fetchWithCache(res, cachePath, ok);
+            if (!ok)
                 return failure(res.code());
-            }
 
             auto parsed = matjson::parse(jsonStr);
-            if (!parsed.isOk()) return failure(500);
+            if (!parsed.isOk())
+                return failure(500);
 
-            ddlLoaded = true;
-            ddl.clear();
+            auto &out = levels(type);
+            s_loaded[static_cast<int>(type)] = true;
+            out.clear();
             int index = 1;
-            
-            for (auto& level : parsed.unwrap().asArray().unwrap()) {
+
+            for (auto &level : parsed.unwrap().asArray().unwrap())
+            {
                 auto id = level.get<int>("id");
                 auto name = level.get<std::string>("name");
                 auto uid = level.get<std::string>("_id");
                 auto authorRes = level.get<std::string>("author");
-                if (!id.isOk() || !name.isOk() || !uid.isOk()) continue;
-                
-                ddl.emplace_back(id.unwrap(), index++, name.unwrap(), authorRes.unwrapOr("Unknown"), uid.unwrap());
+                if (!id.isOk() || !name.isOk() || !uid.isOk())
+                    continue;
+
+                out.emplace_back(id.unwrap(), index++, name.unwrap(), authorRes.unwrapOr("Unknown"), uid.unwrap());
             }
             success();
-        }
-    );
+        });
 }
 
-void DDLIntegration::loadDCL(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
-    auto cachePath = geode::Mod::get()->getSaveDir() / "dcl_cache.json";
+void DDLIntegration::loadPacks(ListType type, TaskHolder<web::WebResponse> &listener, Function<void()> success, CopyableFunction<void(int)> failure)
+{
+    auto cachePath = geode::Mod::get()->getSaveDir() / cachePathFor(type, "_packs_cache");
 
     listener.spawn(
-        web::WebRequest().get("https://www.denouementdemonlist.com/api/levels?type=DCL"),
-        [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
-            if (res.ok()) {
-                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
-            }
-
-            std::string jsonStr;
-            if (res.ok()) {
-                jsonStr = res.string().unwrapOr("[]");
-            } else if (std::filesystem::exists(cachePath)) {
-                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
-            } else {
+        web::WebRequest().get(fmt::format("https://www.denouementdemonlist.com/api/packs?type={}", listName(type))),
+        [type, cachePath, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable
+        {
+            bool ok = false;
+            auto jsonStr = fetchWithCache(res, cachePath, ok);
+            if (!ok)
                 return failure(res.code());
-            }
 
             auto parsed = matjson::parse(jsonStr);
-            if (!parsed.isOk()) return failure(500);
+            if (!parsed.isOk())
+                return failure(500);
 
-            dclLoaded = true;
-            dcl.clear();
-            int index = 1;
+            auto &demons = levels(type);
+            auto &out = packs(type);
+            out.clear();
 
-            for (auto& level : parsed.unwrap().asArray().unwrap()) {
-                auto id = level.get<int>("id");
-                auto name = level.get<std::string>("name");
-                auto uid = level.get<std::string>("_id");
-                auto authorRes = level.get<std::string>("author");
-                if (!id.isOk() || !name.isOk() || !uid.isOk()) continue;
-
-                dcl.emplace_back(id.unwrap(), index++, name.unwrap(), authorRes.unwrapOr("Unknown"), uid.unwrap());
-            }
-            success();
-        }
-    );
-}
-
-void DDLIntegration::loadDDLPacks(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
-    auto cachePath = geode::Mod::get()->getSaveDir() / "ddl_packs_cache.json";
-
-    listener.spawn(
-        web::WebRequest().get("https://www.denouementdemonlist.com/api/packs?type=DDL"),
-        [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
-            if (res.ok()) {
-                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
-            }
-
-            std::string jsonStr;
-            if (res.ok()) {
-                jsonStr = res.string().unwrapOr("[]");
-            } else if (std::filesystem::exists(cachePath)) {
-                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
-            } else {
-                return failure(res.code());
-            }
-
-            auto parsed = matjson::parse(jsonStr);
-            if (!parsed.isOk()) return failure(500);
-
-            ddlPacks.clear();
-            for (auto& pack : parsed.unwrap().asArray().unwrap()) {
+            for (auto &pack : parsed.unwrap().asArray().unwrap())
+            {
                 auto name = pack.get<std::string>("name");
                 auto levelsUidRes = pack.get<std::vector<matjson::Value>>("levels");
                 auto color = pack.get<std::string>("color").unwrapOr("#ffffff");
-                if (!name.isOk() || !levelsUidRes.isOk()) continue;
+                if (!name.isOk() || !levelsUidRes.isOk())
+                    continue;
 
                 std::vector<int> gdIds;
                 double totalPackPoints = 0.0;
-                for (auto const& uuidVal : levelsUidRes.unwrap()) {
-                    if (!uuidVal.isString()) continue;
+                for (auto const &uuidVal : levelsUidRes.unwrap())
+                {
+                    if (!uuidVal.isString())
+                        continue;
                     std::string uuid = uuidVal.asString().unwrap();
 
-                    auto it = std::find_if(ddl.begin(), ddl.end(), [ & ](const IDListDemon& d) { return d.uid == uuid; });
-                    if (it != ddl.end()) {
+                    auto it = std::find_if(demons.begin(), demons.end(), [&](const IDListDemon &d)
+                                           { return d.uid == uuid; });
+                    if (it != demons.end())
+                    {
                         gdIds.push_back(it->id);
-                        totalPackPoints += calculateScore(it->position, false);
+                        totalPackPoints += calculateScore(it->position, type);
                     }
                 }
 
-                ddlPacks.emplace_back(name.unwrap(), color, gdIds, roundScore(totalPackPoints * 0.33));
+                out.emplace_back(name.unwrap(), color, gdIds, roundScore(totalPackPoints * 0.33));
             }
             success();
-        }
-    );
+        });
 }
 
-void DDLIntegration::loadDCLPacks(TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
-    auto cachePath = geode::Mod::get()->getSaveDir() / "dcl_packs_cache.json";
-
-    listener.spawn(
-        web::WebRequest().get("https://www.denouementdemonlist.com/api/packs?type=DCL"),
-        [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
-            if (res.ok()) {
-                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
-            }
-
-            std::string jsonStr;
-            if (res.ok()) {
-                jsonStr = res.string().unwrapOr("[]");
-            } else if (std::filesystem::exists(cachePath)) {
-                jsonStr = geode::utils::file::readString(cachePath).unwrapOr("[]");
-            } else {
-                return failure(res.code());
-            }
-
-            auto parsed = matjson::parse(jsonStr);
-            if (!parsed.isOk()) return failure(500);
-
-            dclPacks.clear();
-            for (auto& pack : parsed.unwrap().asArray().unwrap()) {
-                auto name = pack.get<std::string>("name");
-                auto levelsUidRes = pack.get<std::vector<matjson::Value>>("levels");
-                auto color = pack.get<std::string>("color").unwrapOr("#ffffff");
-                if (!name.isOk() || !levelsUidRes.isOk()) continue;
-
-                std::vector<int> gdIds;
-                double totalPackPoints = 0.0;
-                for (auto const& uuidVal : levelsUidRes.unwrap()) {
-                    if (!uuidVal.isString()) continue;
-                    std::string uuid = uuidVal.asString().unwrap();
-
-                    auto it = std::find_if(dcl.begin(), dcl.end(), [ & ](const IDListDemon& d) { return d.uid == uuid; });
-                    if (it != dcl.end()) {
-                        gdIds.push_back(it->id);
-                        totalPackPoints += calculateScore(it->position, true);
-                    }
-                }
-
-                dclPacks.emplace_back(name.unwrap(), color, gdIds, roundScore(totalPackPoints * 0.33));
-            }
-            success();
-        }
-    );
-}
-
-namespace {
-    struct UserTempData {
+namespace
+{
+    struct UserTempData
+    {
         std::string name;
         double points = 0.0;
         std::set<int> completedGdIds;
@@ -285,63 +268,81 @@ namespace {
         std::set<int> progressedGdIds;
     };
 
-    std::vector<DDLLeaderboardEntry> computeLeaderboardData(const matjson::Value& res, bool isDcl) {
+    std::vector<DDLLeaderboardEntry> computeLeaderboardData(const matjson::Value &res, ListType type)
+    {
         std::map<std::string, UserTempData> userMap;
-        if (!res.isArray()) return {};
+        if (!res.isArray())
+            return {};
 
         int rank = 1;
-        for (auto& lvl : res.asArray().unwrap()) {
+        for (auto &lvl : res.asArray().unwrap())
+        {
             auto gdIdRes = lvl.get<int>("id");
-            if (!gdIdRes.isOk()) continue;
+            if (!gdIdRes.isOk())
+                continue;
             int gdId = gdIdRes.unwrap();
 
             auto lvlNameRes = lvl.get<std::string>("name");
             std::string lvlName = lvlNameRes.isOk() ? lvlNameRes.unwrap() : "Unknown";
 
             int minPercent = lvl.get<int>("percentToQualify").unwrapOr(100);
-            double baseScore = DDLIntegration::calculateScore(rank, 100, minPercent, isDcl);
+            double baseScore = DDLIntegration::calculateScore(rank, 100, minPercent, type);
 
             auto verifierRes = lvl.get<std::string>("verifier");
             std::string verifier = verifierRes.isOk() ? verifierRes.unwrap() : "";
-            if (!verifier.empty()) {
+            if (!verifier.empty())
+            {
                 auto key = string::toLower(verifier);
-                if (userMap.find(key) == userMap.end()) userMap[ key ] = {verifier};
-                
-                userMap[ key ].points += baseScore;
-                if (userMap[ key ].completedGdIds.find(gdId) == userMap[ key ].completedGdIds.end()) {
-                    userMap[ key ].completedGdIds.insert(gdId);
-                    userMap[ key ].verifiedLevels.push_back({lvlName, rank, baseScore});
-                    userMap[ key ].verifiedPoints += baseScore;
+                if (userMap.find(key) == userMap.end())
+                    userMap[key] = {verifier};
+
+                userMap[key].points += baseScore;
+                if (userMap[key].completedGdIds.find(gdId) == userMap[key].completedGdIds.end())
+                {
+                    userMap[key].completedGdIds.insert(gdId);
+                    userMap[key].verifiedLevels.push_back({lvlName, rank, baseScore});
+                    userMap[key].verifiedPoints += baseScore;
                 }
             }
 
             auto recordsRes = lvl.get<std::vector<matjson::Value>>("records");
-            if (recordsRes.isOk()) {
-                for (auto& rec : recordsRes.unwrap()) {
+            if (recordsRes.isOk())
+            {
+                for (auto &rec : recordsRes.unwrap())
+                {
                     auto userRes = rec.get<std::string>("user");
                     auto pctRes = rec.get<int>("percent");
-                    if (!userRes.isOk() || !pctRes.isOk()) continue;
-                    
+                    if (!userRes.isOk() || !pctRes.isOk())
+                        continue;
+
                     std::string user = userRes.unwrap();
-                    if (user.empty()) continue;
-                    
+                    if (user.empty())
+                        continue;
+
                     auto key = string::toLower(user);
-                    if (userMap.find(key) == userMap.end()) userMap[ key ] = {user};
+                    if (userMap.find(key) == userMap.end())
+                        userMap[key] = {user};
 
                     int percent = pctRes.unwrap();
-                    if (percent == 100) {
-                        if (key != string::toLower(verifier)) {
-                            if (userMap[ key ].completedGdIds.find(gdId) == userMap[ key ].completedGdIds.end()) {
-                                userMap[ key ].points += baseScore;
-                                userMap[ key ].completedGdIds.insert(gdId);
-                                userMap[ key ].completedLevels.push_back({lvlName, rank, baseScore});
-                                userMap[ key ].completedPoints += baseScore;
+                    if (percent == 100)
+                    {
+                        if (key != string::toLower(verifier))
+                        {
+                            if (userMap[key].completedGdIds.find(gdId) == userMap[key].completedGdIds.end())
+                            {
+                                userMap[key].points += baseScore;
+                                userMap[key].completedGdIds.insert(gdId);
+                                userMap[key].completedLevels.push_back({lvlName, rank, baseScore});
+                                userMap[key].completedPoints += baseScore;
                             }
                         }
-                    } else if (percent >= minPercent) {
+                    }
+                    else if (percent >= minPercent)
+                    {
                         if (userMap[key].completedGdIds.find(gdId) == userMap[key].completedGdIds.end() &&
-                            userMap[key].progressedGdIds.find(gdId) == userMap[ key ].progressedGdIds.end()) {
-                            double progressScore = DDLIntegration::calculateScore(rank, percent, minPercent, isDcl);
+                            userMap[key].progressedGdIds.find(gdId) == userMap[key].progressedGdIds.end())
+                        {
+                            double progressScore = DDLIntegration::calculateScore(rank, percent, minPercent, type);
                             userMap[key].points += progressScore;
                             userMap[key].progressedGdIds.insert(gdId);
                             userMap[key].progressedLevels.push_back({std::to_string(percent) + "% " + lvlName, rank, progressScore});
@@ -353,18 +354,24 @@ namespace {
             rank++;
         }
 
-        const auto& packs = isDcl ? DDLIntegration::dclPacks : DDLIntegration::ddlPacks;
-        for (auto& [ key, user ] : userMap) {
-            for (auto& pack : packs) {
-                if (pack.levels.empty()) continue;
+        const auto &packs = DDLIntegration::packs(type);
+        for (auto &[key, user] : userMap)
+        {
+            for (auto &pack : packs)
+            {
+                if (pack.levels.empty())
+                    continue;
                 bool complete = true;
-                for (int id : pack.levels) {
-                    if (user.completedGdIds.find(id) == user.completedGdIds.end()) {
+                for (int id : pack.levels)
+                {
+                    if (user.completedGdIds.find(id) == user.completedGdIds.end())
+                    {
                         complete = false;
                         break;
                     }
                 }
-                if (complete) {
+                if (complete)
+                {
                     user.points += pack.points;
                     user.packs.push_back(pack.name);
                     user.packPoints += pack.points;
@@ -373,52 +380,52 @@ namespace {
         }
 
         std::vector<DDLLeaderboardEntry> result;
-        for (auto& [ key, user ] : userMap) {
-            if (!user.completedLevels.empty() || !user.verifiedLevels.empty() || !user.packs.empty() || !user.progressedLevels.empty()) {
-                result.push_back({
-                    user.name, user.points,
-                    user.packs, user.packPoints,
-                    user.verifiedLevels, user.verifiedPoints,
-                    user.completedLevels, user.completedPoints,
-                    user.progressedLevels, user.progressedPoints,
-                    0
-                });
+        for (auto &[key, user] : userMap)
+        {
+            if (!user.completedLevels.empty() || !user.verifiedLevels.empty() || !user.packs.empty() || !user.progressedLevels.empty())
+            {
+                result.push_back({user.name, user.points,
+                                  user.packs, user.packPoints,
+                                  user.verifiedLevels, user.verifiedPoints,
+                                  user.completedLevels, user.completedPoints,
+                                  user.progressedLevels, user.progressedPoints,
+                                  0});
             }
         }
 
-        std::sort(result.begin(), result.end(), [](const auto& a, const auto& b) {
+        std::sort(result.begin(), result.end(), [](const auto &a, const auto &b)
+                  {
             if (a.points != b.points) {
                 return a.points > b.points;
             }
             size_t aTotal = a.completedLevels.size() + a.verifiedLevels.size();
             size_t bTotal = b.completedLevels.size() + b.verifiedLevels.size();
-            return aTotal > bTotal;
-        });
+            return aTotal > bTotal; });
 
-        for (size_t i = 0; i < result.size(); i++) {
-            result[ i ].rank = i + 1;
+        for (size_t i = 0; i < result.size(); i++)
+        {
+            result[i].rank = i + 1;
         }
 
         return result;
     }
 }
 
-void DDLIntegration::loadLeaderboard(bool isDcl, TaskHolder<web::WebResponse>& listener, Function<void()> success, CopyableFunction<void(int)> failure) {
-    std::string typeStr = isDcl ? "DCL" : "DDL";
-    std::string url = "https://www.denouementdemonlist.com/api/levels?type=" + typeStr + "&full=true";
-    
+void DDLIntegration::loadLeaderboard(ListType type, TaskHolder<web::WebResponse> &listener, Function<void()> success, CopyableFunction<void(int)> failure)
+{
+    auto url = fmt::format("https://www.denouementdemonlist.com/api/levels?type={}&full=true", listName(type));
+
     listener.spawn(
         web::WebRequest().get(url),
-        [ isDcl, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
-            if (!res.ok()) return failure(res.code());
+        [type, failure = std::move(failure), success = std::move(success)](web::WebResponse res) mutable
+        {
+            if (!res.ok())
+                return failure(res.code());
             auto jsonRes = res.json();
-            if (!jsonRes.isOk()) return failure(500);
+            if (!jsonRes.isOk())
+                return failure(500);
 
-            auto list = computeLeaderboardData(jsonRes.unwrap(), isDcl);
-            if (isDcl) dclLeaderboard = list;
-            else ddlLeaderboard = list;
-            
+            leaderboard(type) = computeLeaderboardData(jsonRes.unwrap(), type);
             success();
-        }
-    );
+        });
 }

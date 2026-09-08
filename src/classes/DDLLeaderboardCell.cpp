@@ -4,9 +4,11 @@
 
 using namespace geode::prelude;
 
-DDLLeaderboardCell* DDLLeaderboardCell::create(const DDLLeaderboardEntry& entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index) {
+DDLLeaderboardCell *DDLLeaderboardCell::create(const DDLLeaderboardEntry &entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index)
+{
     auto ret = new DDLLeaderboardCell();
-    if (ret->init(entry, onProfileOpen, index)) {
+    if (ret->init(entry, onProfileOpen, index))
+    {
         ret->autorelease();
         return ret;
     }
@@ -14,9 +16,11 @@ DDLLeaderboardCell* DDLLeaderboardCell::create(const DDLLeaderboardEntry& entry,
     return nullptr;
 }
 
-bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index) {
-    if (!CCLayer::init()) return false;
-    
+bool DDLLeaderboardCell::init(const DDLLeaderboardEntry &entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index)
+{
+    if (!CCLayer::init())
+        return false;
+
     m_entry = entry;
     m_onProfileOpen = onProfileOpen;
     setContentSize({356.0f, 35.0f});
@@ -26,14 +30,21 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableF
     addChild(bg);
 
     auto rankLabel = CCLabelBMFont::create(fmt::format("#{}", entry.rank).c_str(), "bigFont.fnt");
-    
-    if (entry.rank == 1) {
+
+    if (entry.rank == 1)
+    {
         rankLabel->setColor({255, 200, 50});
-    } else if (entry.rank == 2) {
+    }
+    else if (entry.rank == 2)
+    {
         rankLabel->setColor({200, 200, 200});
-    } else if (entry.rank == 3) {
+    }
+    else if (entry.rank == 3)
+    {
         rankLabel->setColor({210, 140, 70});
-    } else {
+    }
+    else
+    {
         rankLabel->setColor({255, 255, 255});
     }
 
@@ -59,7 +70,7 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableF
     profileSpr->setScale(profileScale);
 
     auto btn = CCMenuItemSpriteExtra::create(profileSpr, this, menu_selector(DDLLeaderboardCell::onProfile));
-    
+
     auto menu = CCMenu::create();
     menu->addChild(btn);
     menu->setPosition(ccp(342.0f, 17.5f));
@@ -68,8 +79,10 @@ bool DDLLeaderboardCell::init(const DDLLeaderboardEntry& entry, geode::CopyableF
     return true;
 }
 
-void DDLLeaderboardCell::onProfile(CCObject*) {
-    if (m_onProfileOpen) {
+void DDLLeaderboardCell::onProfile(CCObject *)
+{
+    if (m_onProfileOpen)
+    {
         m_onProfileOpen(m_entry.user);
     }
 }

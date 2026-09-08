@@ -5,14 +5,15 @@
 #include <Geode/utils/general.hpp>
 #include "../DDLIntegration.hpp"
 
-class DDLLeaderboardCell : public cocos2d::CCLayer {
+class DDLLeaderboardCell : public cocos2d::CCLayer
+{
 public:
-    static DDLLeaderboardCell* create(const DDLLeaderboardEntry& entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index);
+    static DDLLeaderboardCell *create(const DDLLeaderboardEntry &entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index);
 
 protected:
     DDLLeaderboardEntry m_entry;
     geode::CopyableFunction<void(std::string)> m_onProfileOpen;
 
-    bool init(const DDLLeaderboardEntry& entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index);
-    void onProfile(cocos2d::CCObject*);
+    bool init(const DDLLeaderboardEntry &entry, geode::CopyableFunction<void(std::string)> onProfileOpen, int index);
+    void onProfile(cocos2d::CCObject *);
 };
