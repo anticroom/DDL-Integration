@@ -13,8 +13,7 @@ class $modify(DDLLevelSearchLayer, LevelSearchLayer) {
         
         auto ddlButton = CCMenuItemSpriteExtra::create(ddlButtonSprite, this, menu_selector(DDLLevelSearchLayer::onDDLLevels));
         
-        ddlButton->setID("ddl-search-button");
-        ddlButton->setTag(1);
+        ddlButton->setID("ddl-search-button"_spr);
         
         if (auto menu = this->getChildByID("bottom-left-menu")) {
             menu->addChild(ddlButton);

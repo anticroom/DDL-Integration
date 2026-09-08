@@ -1,5 +1,6 @@
 #pragma once
 #include <Geode/utils/web.hpp>
+#include <cocos2d.h>
 #include <vector>
 #include <string>
 
@@ -67,6 +68,7 @@ namespace DDLIntegration {
     void loadLeaderboard(bool isDcl, geode::async::TaskHolder<geode::utils::web::WebResponse>&, geode::Function<void()>, geode::CopyableFunction<void(int)>);
     
     int getLegacyCutoff(bool isDcl);
+    cocos2d::CCLabelBMFont* createRankLabel(const std::string& text, int position, float scale);
     double calculateScore(int rank, bool isDcl = false);
     double calculateScore(int rank, int percent, int minPercent, bool isDcl);
 }

@@ -35,9 +35,9 @@ CCScene* DDLListLayer::scene() {
     return ret;
 }
 
-bool dclEnabled = false;
-const char* ddlInfo = "The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
-const char* dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
+static bool dclEnabled = false;
+static const char* ddlInfo = "The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
+static const char* dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
 
 bool DDLListLayer::init() {
     if (!CCLayer::init()) return false;
@@ -827,37 +827,19 @@ void DDLListLayer::showProfilePage(const std::string& username) {
     m_profileStatsNode->addChild(usernameLabel);
 
     if (rank > 0) {
-        auto rankLabel = CCLabelBMFont::create(fmt::format("RANK\n{}", rank).c_str(), "goldFont-uhd.fnt");
+        auto rankLabel = DDLIntegration::createRankLabel(fmt::format("RANK\n{}", rank), rank, 0.5f);
+        if (!rankLabel) return;
         rankLabel->setAnchorPoint(ccp(1.0f, 0.5f));
         rankLabel->setPosition(ccp(center.x + 180.0f, center.y + 110.0f));
-        rankLabel->setScale(0.5f * (cocos2d::CC_CONTENT_SCALE_FACTOR() / 4.0f));
         rankLabel->setAlignment(kCCTextAlignmentCenter);
         rankLabel->setID("rank-label");
 
         std::string trophyFile = "";
-        std::string fontTexFile = "";
-
-        if (rank == 1) {
-            trophyFile = "DDL_rankicon_ruby.png";
-            fontTexFile = "DDL_RubyFont-uhd.png";
-        } else if (rank <= 3) {
-            trophyFile = "DDL_rankicon_diamond.png";
-            fontTexFile = "DDL_DiamondFont-uhd.png";
-        } else if (rank <= 5) {
-            trophyFile = "DDL_rankicon_gold.png";
-            fontTexFile = "DDL_GoldFont-uhd.png";
-        } else if (rank <= 10) {
-            trophyFile = "DDL_rankicon_silver.png";
-            fontTexFile = "DDL_SilverFont-uhd.png";
-        } else if (rank <= 25) {
-            trophyFile = "DDL_rankicon_bronze.png";
-            fontTexFile = "DDL_BronzeFont-uhd.png";
-        }
-
-        if (!fontTexFile.empty()) {
-            auto tex = CCTextureCache::get()->addImage(geode::Mod::get()->expandSpriteName(fontTexFile.c_str()).c_str(), false);
-            if (tex) rankLabel->setTexture(tex);
-        }
+        if (rank == 1) trophyFile = "DDL_rankicon_ruby.png";
+        else if (rank <= 3) trophyFile = "DDL_rankicon_diamond.png";
+        else if (rank <= 5) trophyFile = "DDL_rankicon_gold.png";
+        else if (rank <= 10) trophyFile = "DDL_rankicon_silver.png";
+        else if (rank <= 25) trophyFile = "DDL_rankicon_bronze.png";
 
         m_profileStatsNode->addChild(rankLabel);
 
@@ -893,6 +875,7 @@ void DDLListLayer::showProfilePage(const std::string& username) {
     m_profileStatsNode->addChild(pointsText);
 
     auto barTexRef = CCSprite::create("DDL_progressBar_001.png"_spr);
+    if (!barTexRef) return;
     auto barTexSize = barTexRef->getContentSize();
 
     float barWidth = 270.0f;

@@ -27,6 +27,46 @@ static double roundScore(double num) {
 int DDLIntegration::getLegacyCutoff(bool isDcl) {
     return isDcl ? 100 : 150;
 }
+
+static const char* rankAtlasFor(int position) {
+    if (position == 1) return "DDL_RubyFont";
+    if (position <= 3) return "DDL_DiamondFont";
+    if (position <= 5) return "DDL_GoldFont";
+    if (position <= 10) return "DDL_SilverFont";
+    if (position <= 25) return "DDL_BronzeFont";
+    return nullptr;
+}
+
+CCLabelBMFont* DDLIntegration::createRankLabel(const std::string& text, int position, float scale) {
+    static const struct { const char* fnt; const char* suffix; float glyph; } variants[] = {
+        { "goldFont-uhd.fnt", "-uhd", 4.0f },
+        { "goldFont-hd.fnt", "-hd", 2.0f },
+        { "goldFont.fnt", "", 1.0f },
+    };
+
+    CCLabelBMFont* label = nullptr;
+    const char* suffix = "";
+    float glyph = 1.0f;
+
+    for (auto const& variant : variants) {
+        label = CCLabelBMFont::create(text.c_str(), variant.fnt);
+        if (label) {
+            suffix = variant.suffix;
+            glyph = variant.glyph;
+            break;
+        }
+    }
+    if (!label) return nullptr;
+
+    label->setScale(scale * CC_CONTENT_SCALE_FACTOR() / glyph);
+
+    if (auto atlas = rankAtlasFor(position)) {
+        auto name = geode::Mod::get()->expandSpriteName(fmt::format("{}{}.png", atlas, suffix));
+        if (auto tex = CCTextureCache::get()->addImage(name.c_str(), false)) label->setTexture(tex);
+    }
+
+    return label;
+}
 double DDLIntegration::calculateScore(int rank, bool isDcl) {
     const int legacyCutoff = getLegacyCutoff(isDcl);
     if (rank > legacyCutoff) return roundScore(1.0);
@@ -58,7 +98,7 @@ void DDLIntegration::loadDDL(TaskHolder<web::WebResponse>& listener, Function<vo
         web::WebRequest().get("https://www.denouementdemonlist.com/api/levels?type=DDL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
-                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
             }
 
             std::string jsonStr;
@@ -98,7 +138,7 @@ void DDLIntegration::loadDCL(TaskHolder<web::WebResponse>& listener, Function<vo
         web::WebRequest().get("https://www.denouementdemonlist.com/api/levels?type=DCL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
-                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
             }
 
             std::string jsonStr;
@@ -138,7 +178,7 @@ void DDLIntegration::loadDDLPacks(TaskHolder<web::WebResponse>& listener, Functi
         web::WebRequest().get("https://www.denouementdemonlist.com/api/packs?type=DDL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
-                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
             }
 
             std::string jsonStr;
@@ -187,7 +227,7 @@ void DDLIntegration::loadDCLPacks(TaskHolder<web::WebResponse>& listener, Functi
         web::WebRequest().get("https://www.denouementdemonlist.com/api/packs?type=DCL"),
         [ cachePath, failure = std::move(failure), success = std::move(success) ](web::WebResponse res) mutable {
             if (res.ok()) {
-                geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
+                (void)geode::utils::file::writeString(cachePath, res.string().unwrapOr("[]"));
             }
 
             std::string jsonStr;

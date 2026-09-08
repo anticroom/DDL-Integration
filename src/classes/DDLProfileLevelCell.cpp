@@ -33,32 +33,12 @@ bool DDLProfileLevelCell::init(const DDLLevelRecord& record, bool isVerification
     nameLabel->setID("name-label");
     addChild(nameLabel);
 
-    auto placementLabel = CCLabelBMFont::create(fmt::format("#{}", record.position).c_str(), "goldFont-uhd.fnt");
+    auto placementLabel = DDLIntegration::createRankLabel(fmt::format("#{}", record.position), record.position, 0.55f);
+    if (!placementLabel) return false;
     placementLabel->setPosition(ccp(230.0f, 15.0f));
-    placementLabel->setScale(0.55f * (cocos2d::CC_CONTENT_SCALE_FACTOR() / 4.0f));
     placementLabel->setID("placement-label");
-
-    std::string fontTexFile = "";
-    int legacyThreshold = isDCL ? 100 : 150;
-
-    if (record.position == 1) {
-        fontTexFile = "DDL_RubyFont-uhd.png";
-    } else if (record.position <= 3) {
-        fontTexFile = "DDL_DiamondFont-uhd.png";
-    } else if (record.position <= 5) {
-        fontTexFile = "DDL_GoldFont-uhd.png";
-    } else if (record.position <= 10) {
-        fontTexFile = "DDL_SilverFont-uhd.png";
-    } else if (record.position <= 25) {
-        fontTexFile = "DDL_BronzeFont-uhd.png";
-    } else if (record.position > legacyThreshold) {
+    if (record.position > DDLIntegration::getLegacyCutoff(isDCL)) {
         placementLabel->setColor({ 255, 75, 75 });
-    }
-
-    if (!fontTexFile.empty()) {
-        if (auto tex = CCTextureCache::get()->addImage(geode::Mod::get()->expandSpriteName(fontTexFile.c_str()).c_str(), false)) {
-            placementLabel->setTexture(tex);
-        }
     }
 
     addChild(placementLabel);

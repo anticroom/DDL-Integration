@@ -26,6 +26,22 @@ class $modify(DDLLevelCell, LevelCell) {
         if (level->m_levelType == GJLevelType::Editor) return;
 
         auto levelID = level->m_levelID.value();
+        CCNode* diffNode = m_mainLayer->getChildByID("difficulty-sprite");
+        if (!diffNode) {
+            if (auto container = m_mainLayer->getChildByID("difficulty-container")) {
+                diffNode = container->getChildByID("difficulty-sprite");
+            }
+        }
+        if (diffNode) {
+            if (auto stale = diffNode->getParent()->getChildByID("ddl-face-node"_spr)) {
+                stale->removeFromParent();
+            }
+            diffNode->setVisible(true);
+        }
+        if (auto staleLabel = m_mainLayer->getChildByID("level-rank-label"_spr)) {
+            staleLabel->removeFromParent();
+        }
+
         std::vector<std::string> rankStrings;
         int bestRank = 99999;
         std::string bestSource = "";
@@ -64,19 +80,12 @@ class $modify(DDLLevelCell, LevelCell) {
 
         if (!rankStrings.empty()) {
             this->addRank(rankStrings, bestRank, bestSource);
-            
-            CCNode* diffNode = m_mainLayer->getChildByID("difficulty-sprite");
-            if (!diffNode) {
-                if (auto container = m_mainLayer->getChildByID("difficulty-container")) {
-                    diffNode = container->getChildByID("difficulty-sprite");
-                }
-            }
-            
-            if (diffNode && !diffNode->getParent()->getChildByID("ddl-face-node")) {
+
+            if (diffNode) {
                 diffNode->setVisible(false);
 
                 auto customNode = CCNode::create();
-                customNode->setID("ddl-face-node");
+                customNode->setID("ddl-face-node"_spr);
                 customNode->setPosition(diffNode->getPosition());
                 customNode->setAnchorPoint({0.5f, 0.5f});
                 
@@ -161,8 +170,6 @@ class $modify(DDLLevelCell, LevelCell) {
     }
 
     void addRank(const std::vector<std::string>& ranks, int bestRank, const std::string& bestSource = "") {
-        if (m_mainLayer->getChildByID("level-rank-label"_spr)) return;
-
         auto dailyLevel = m_level->m_dailyID.value() > 0;
         auto isWhite = dailyLevel || jasmine::setting::getValue<bool>("white-rank");
 
@@ -180,11 +187,12 @@ class $modify(DDLLevelCell, LevelCell) {
         rankTextNode->setScale(m_compactView ? 0.25f : 0.35f);
 
         auto rlc = Loader::get()->getLoadedMod("raydeeux.revisedlevelcells");
-        if (rlc && rlc->getSettingValue<bool>("enabled") && rlc->getSettingValue<bool>("blendingText")) {
+        if (rlc && rlc->hasSetting("enabled") && rlc->hasSetting("blendingText") &&
+            rlc->getSettingValue<bool>("enabled") && rlc->getSettingValue<bool>("blendingText")) {
             rankTextNode->setBlendFunc({ GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA });
         }
         
-        int legacyThreshold = (bestSource == "DCL") ? 100 : 150;
+        int legacyThreshold = DDLIntegration::getLegacyCutoff(bestSource == "DCL");
         
         if (bestRank == 1) {
             rankTextNode->setColor({255, 200, 50});

@@ -45,11 +45,11 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer) {
 
         if (bestRank != 99999) {
             if (auto diffNode = this->getChildByID("difficulty-sprite")) {
-                if (!this->getChildByID("ddl-face-node")) {
+                if (!this->getChildByID("ddl-face-node"_spr)) {
                     diffNode->setVisible(false);
 
                     auto customNode = CCNode::create();
-                    customNode->setID("ddl-face-node");
+                    customNode->setID("ddl-face-node"_spr);
                     customNode->setPosition(diffNode->getPosition());
                     customNode->setAnchorPoint({0.5f, 0.5f});
                     
