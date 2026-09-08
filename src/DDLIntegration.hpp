@@ -59,14 +59,16 @@ namespace DDLIntegration
     enum class ListType
     {
         DDL,
-        DCL
+        DCL,
+        DVL
     };
-    inline constexpr int listTypeCount = 2;
+    inline constexpr int listTypeCount = 3;
 
     std::vector<IDListDemon> &levels(ListType);
     std::vector<IDDemonPack> &packs(ListType);
     std::vector<DDLLeaderboardEntry> &leaderboard(ListType);
     bool isLoaded(ListType);
+    bool arePacksLoaded(ListType);
     const char *listName(ListType);
 
     void loadLevels(ListType, geode::async::TaskHolder<geode::utils::web::WebResponse> &, geode::Function<void()>, geode::CopyableFunction<void(int)>);

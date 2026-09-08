@@ -14,7 +14,8 @@ using ListType = DDLIntegration::ListType;
 static std::vector<IDListDemon> s_levels[DDLIntegration::listTypeCount];
 static std::vector<IDDemonPack> s_packs[DDLIntegration::listTypeCount];
 static std::vector<DDLLeaderboardEntry> s_leaderboards[DDLIntegration::listTypeCount];
-static bool s_loaded[DDLIntegration::listTypeCount] = {false, false};
+static bool s_loaded[DDLIntegration::listTypeCount] = {};
+static bool s_packsLoaded[DDLIntegration::listTypeCount] = {};
 
 std::vector<IDListDemon> &DDLIntegration::levels(ListType type)
 {
@@ -32,9 +33,22 @@ bool DDLIntegration::isLoaded(ListType type)
 {
     return s_loaded[static_cast<int>(type)];
 }
+bool DDLIntegration::arePacksLoaded(ListType type)
+{
+    return s_packsLoaded[static_cast<int>(type)];
+}
 const char *DDLIntegration::listName(ListType type)
 {
-    return type == ListType::DCL ? "DCL" : "DDL";
+    switch (type)
+    {
+    case ListType::DDL:
+        return "DDL";
+    case ListType::DCL:
+        return "DCL";
+    case ListType::DVL:
+        return "DVL";
+    }
+    return "DDL";
 }
 
 static std::string cachePathFor(ListType type, const char *suffix)
@@ -68,7 +82,15 @@ static double roundScore(double num)
 }
 int DDLIntegration::getLegacyCutoff(ListType type)
 {
-    return type == ListType::DCL ? 100 : 150;
+    switch (type)
+    {
+    case ListType::DDL:
+        return 150;
+    case ListType::DCL:
+    case ListType::DVL:
+        return 100;
+    }
+    return 100;
 }
 
 static const char *rankAtlasFor(int position)
@@ -217,6 +239,7 @@ void DDLIntegration::loadPacks(ListType type, TaskHolder<web::WebResponse> &list
 
             auto &demons = levels(type);
             auto &out = packs(type);
+            s_packsLoaded[static_cast<int>(type)] = true;
             out.clear();
 
             for (auto &pack : parsed.unwrap().asArray().unwrap())

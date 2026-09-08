@@ -6,7 +6,7 @@
         "mac": "2.2081",
         "ios": "2.2081"
     },
-    "version": "v1.5.0",
+    "version": "v1.6.0",
     "id": "anticroom.ddl-integration",
     "name": "DDL Integration",
     "developer": "anticroom",
@@ -41,6 +41,12 @@
             "description": "Sets the color of the background for the DCL",
             "type": "color",
             "default": "#ba3fff"
+        },
+        "dvl-bg-color": {
+            "name": "DVL Background Color",
+            "description": "Sets the color of the background for the DVL",
+            "type": "color",
+            "default": "#6b84ff"
         },
         "scroll-speed": {
             "name": "Scroll Speed",

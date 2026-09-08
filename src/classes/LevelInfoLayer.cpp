@@ -23,7 +23,7 @@ class $modify(DDLLevelInfoLayer, LevelInfoLayer)
         std::string bestSource = "";
         auto levelID = level->m_levelID.value();
 
-        for (auto type : {DDLIntegration::ListType::DDL, DDLIntegration::ListType::DCL})
+        for (auto type : {DDLIntegration::ListType::DDL, DDLIntegration::ListType::DCL, DDLIntegration::ListType::DVL})
         {
             if (!DDLIntegration::isLoaded(type))
                 continue;

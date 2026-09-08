@@ -43,7 +43,16 @@ static ListType currentList = ListType::DDL;
 
 static const char *bgColorSetting(ListType type)
 {
-    return type == ListType::DCL ? "dcl-bg-color" : "ddl-bg-color";
+    switch (type)
+    {
+    case ListType::DDL:
+        return "ddl-bg-color";
+    case ListType::DCL:
+        return "dcl-bg-color";
+    case ListType::DVL:
+        return "dvl-bg-color";
+    }
+    return "ddl-bg-color";
 }
 
 static ccColor3B listBgColor(ListType type)
@@ -56,6 +65,22 @@ static ccColor3B listBgColor(ListType type)
 }
 static const char *ddlInfo = "The Denouement Demon List is a list of levels that have the first few denouement inputs, the levels are ranked by difficulty of the level.";
 static const char *dclInfo = "The Denouement Challenge List is a list of challenges that have the first few denouement inputs with whatever is added afterwards, the challenges are ranked by difficulty of the challenges.";
+
+static const char *dvlInfo = "The Denouement Variant List is a list of variants of denouement wave which resembles the original part, the levels are ranked by difficulty of the level.";
+
+static const char *listInfo(ListType type)
+{
+    switch (type)
+    {
+    case ListType::DDL:
+        return ddlInfo;
+    case ListType::DCL:
+        return dclInfo;
+    case ListType::DVL:
+        return dvlInfo;
+    }
+    return ddlInfo;
+}
 
 bool DDLListLayer::init()
 {
@@ -263,7 +288,7 @@ bool DDLListLayer::init()
     m_rightButton->setID("next-page-button");
     menu->addChild(m_rightButton);
 
-    m_infoButton = InfoAlertButton::create("DDL", gd::string(ddlInfo), 1.0f);
+    m_infoButton = InfoAlertButton::create(DDLIntegration::listName(currentList), gd::string(listInfo(currentList)), 1.0f);
     m_infoButton->setPosition(ccp(30.0f, 30.0f));
     m_infoButton->setID("info-button");
     menu->addChild(m_infoButton);
@@ -295,6 +320,14 @@ bool DDLListLayer::init()
     m_moonToggle->setTag(static_cast<int>(ListType::DCL));
     m_moonToggle->setID("dcl-button");
     menu->addChild(m_moonToggle);
+
+    auto variantSprite = CCSprite::createWithSpriteFrameName("GJ_starsIcon_001.png");
+    variantSprite->setScale(1.2f);
+    m_variantToggle = CCMenuItemSpriteExtra::create(variantSprite, this, menu_selector(DDLListLayer::onSwitchList));
+    m_variantToggle->setPosition(ccp(90.0f, 60.0f));
+    m_variantToggle->setTag(static_cast<int>(ListType::DVL));
+    m_variantToggle->setID("dvl-button");
+    menu->addChild(m_variantToggle);
 
     updateListToggles();
 
@@ -455,12 +488,14 @@ void DDLListLayer::updateListToggles()
         m_starToggle->setColor(currentList == ListType::DDL ? on : off);
     if (m_moonToggle)
         m_moonToggle->setColor(currentList == ListType::DCL ? on : off);
+    if (m_variantToggle)
+        m_variantToggle->setColor(currentList == ListType::DVL ? on : off);
 }
 
 void DDLListLayer::loadCurrent(bool force, CopyableFunction<void()> done)
 {
     auto type = currentList;
-    auto needsList = force || !DDLIntegration::isLoaded(type) || DDLIntegration::packs(type).empty();
+    auto needsList = force || !DDLIntegration::isLoaded(type) || !DDLIntegration::arePacksLoaded(type);
     auto wantsLeaderboard = m_viewMode == 2;
 
     CopyableFunction<void()> afterPacks = [this, type, force, wantsLeaderboard, done]() mutable
@@ -530,6 +565,19 @@ void DDLListLayer::switchList(ListType type)
                     child->runAction(cocos2d::CCTintTo::create(0.5f, target.r, target.g, target.b));
                 }
             }
+        }
+    }
+
+    if (m_infoButton)
+    {
+        if (auto menu = m_infoButton->getParent())
+        {
+            auto pos = m_infoButton->getPosition();
+            m_infoButton->removeFromParent();
+            m_infoButton = InfoAlertButton::create(DDLIntegration::listName(type), gd::string(listInfo(type)), 1.0f);
+            m_infoButton->setPosition(pos);
+            m_infoButton->setID("info-button");
+            menu->addChild(m_infoButton);
         }
     }
 

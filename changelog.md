@@ -1,5 +1,9 @@
 # Integrated DDL
-# v1.4.2
+# v1.6.0
+
+Added the Denouement Variant List! Also fixed a crash on android when opening someones leaderboard profile.x
+
+# v1.5.0
 
 Fixed the DCL legacy cutoff not being 100 but instead the DCL was the same as the DDL legacy cutoff of 150 which wasn't the same on the list's website along with switching to using the new lists url.
 

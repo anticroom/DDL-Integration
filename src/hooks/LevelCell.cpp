@@ -11,7 +11,7 @@
 using namespace geode::prelude;
 
 static TaskHolder<web::WebResponse> s_listeners[DDLIntegration::listTypeCount];
-static bool s_fetching[DDLIntegration::listTypeCount] = {false, false};
+static bool s_fetching[DDLIntegration::listTypeCount] = {};
 
 class $modify(DDLLevelCell, LevelCell)
 {
@@ -53,7 +53,7 @@ class $modify(DDLLevelCell, LevelCell)
         int bestRank = 99999;
         auto bestSource = DDLIntegration::ListType::DDL;
 
-        for (auto type : {DDLIntegration::ListType::DDL, DDLIntegration::ListType::DCL})
+        for (auto type : {DDLIntegration::ListType::DDL, DDLIntegration::ListType::DCL, DDLIntegration::ListType::DVL})
         {
             auto index = static_cast<int>(type);
             if (!DDLIntegration::isLoaded(type))

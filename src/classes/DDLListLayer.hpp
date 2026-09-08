@@ -68,6 +68,7 @@ protected:
     CCMenuItemSpriteExtra *m_lastButton;
     CCMenuItemSpriteExtra *m_starToggle;
     CCMenuItemSpriteExtra *m_moonToggle;
+    CCMenuItemSpriteExtra *m_variantToggle;
     CCMenuItemSpriteExtra *m_searchButton;
 
     cocos2d::CCArray *m_pageCache = nullptr;
