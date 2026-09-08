@@ -1,0 +1,109 @@
+name: Nightly Geode Mod
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  check:
+    name: Check for new commits
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare HEAD against the current nightly tag
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tagged=$(git rev-parse -q --verify refs/tags/nightly^{commit} || true)
+          if [ "$tagged" = "$(git rev-parse HEAD)" ]; then
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - name: Windows
+          os: ubuntu-latest
+          target: Win64
+          build-config: RelWithDebInfo
+
+        - name: macOS
+          os: macos-latest
+
+        - name: iOS
+          os: macos-latest
+          target: iOS
+
+        - name: Android32
+          os: ubuntu-latest
+          target: Android32
+
+        - name: Android64
+          os: ubuntu-latest
+          target: Android64
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    needs: ['check']
+    if: needs.check.outputs.should-run == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the mod
+        uses: hiimjasmine00/build-geode-mod@xwin
+        with:
+          build-config: ${{ matrix.config.build-config || 'Release' }}
+          export-pdb: true
+          export-symbols: true
+          combine: true
+          target: ${{ matrix.config.target }}
+
+  release:
+    name: Update nightly release
+    runs-on: ubuntu-latest
+    needs: ['build']
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: geode-sdk/build-geode-mod/combine@main
+        id: build
+
+      - name: List combined output
+        run: ls -lR "${{ steps.build.outputs.build-output }}"
+
+      - name: Read mod version
+        id: mod
+        run: echo "version=$(jq -r .version mod.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: andelf/nightly-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly
+          name: 'Nightly Build @ $$'
+          prerelease: true
+          body: |
+            Automated nightly build of ${{ steps.mod.outputs.version }} from `${{ github.sha }}`.
+
+            These are untested development builds, not a release. Grab a versioned
+            build from the Releases page or the Geode index if you want a stable one.
+          files: |
+            ${{ steps.build.outputs.build-output }}/*
