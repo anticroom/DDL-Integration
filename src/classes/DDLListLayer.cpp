@@ -2,6 +2,7 @@
 #include <Geode/binding/AppDelegate.hpp>
 #include <Geode/binding/CustomListView.hpp>
 #include <Geode/binding/GameLevelManager.hpp>
+#include <Geode/binding/GJUserScore.hpp>
 #include <Geode/binding/GameStatsManager.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
 #include <Geode/binding/GJListLayer.hpp>
@@ -836,20 +837,15 @@ void DDLListLayer::showProfilePage(const std::string &username)
             m_profileStatsNode->addChild(iconAccent, 1);
 
             auto playerIcon = SimplePlayer::create(gm->getPlayerFrame());
-            playerIcon->updatePlayerFrame(iconRes.unwrap(), IconType::Cube);
+            auto iconType = static_cast<IconType>(geode::utils::numFromString<int>(parsedMap[14]).unwrapOr(0));
+            playerIcon->updatePlayerFrame(iconRes.unwrap(), iconType);
             playerIcon->setColor(gm->colorForIdx(color1Res.unwrap()));
             playerIcon->setSecondColor(gm->colorForIdx(color2Res.unwrap()));
 
-            if (parsedMap.contains(15) && parsedMap[15] == "1")
-            {
-                int glowIdx = color2Res.unwrap();
-                if (parsedMap.contains(51))
-                {
-                    if (auto glowRes = geode::utils::numFromString<int>(parsedMap[51]))
-                        glowIdx = glowRes.unwrap();
-                }
-                playerIcon->setGlowOutline(gm->colorForIdx(glowIdx));
-            }
+            auto special = geode::utils::numFromString<int>(parsedMap[15]).unwrapOr(0);
+            auto accGlow = geode::utils::numFromString<int>(parsedMap[28]).unwrapOr(0);
+            if (special > 0 || accGlow > 0)
+                playerIcon->setGlowOutline(gm->colorForIdx(geode::utils::numFromString<int>(parsedMap[51]).unwrapOr(color2Res.unwrap())));
             playerIcon->setScale(1.7f);
             playerIcon->setPosition(ccp(center.x - 150.0f, center.y + 92.5f));
             playerIcon->setID("player-icon");
